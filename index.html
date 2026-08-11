@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1.0,
+               maximum-scale=1.0,
+               user-scalable=no">
+
+<title>Earth Map Test</title>
+
+<style>
+html,body{
+    width:100%;
+    height:100%;
+    margin:0;
+    padding:0;
+    overflow:hidden;
+    background:#063b55;
+}
+
+#earth{
+    width:100%;
+    height:100%;
+    touch-action:none;
+}
+
+canvas{
+    display:block;
+}
+</style>
+</head>
+
+<body>
+
+<div id="earth"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+<script>
+
+/* =====================================
+   المشهد
+===================================== */
+
+const scene = new THREE.Scene();
+
+scene.background =
+    new THREE.Color(0x063b55);
+
+
+/* =====================================
+   الكاميرا
+===================================== */
+
+const camera =
+    new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth /
+        window.innerHeight,
+        0.1,
+        1000
+    );
+
+let cameraHeight = 12;
+
+camera.position.set(
+    0,
+    cameraHeight,
+    0
+);
+
+camera.lookAt(0,0,0);
+
+
+/* =====================================
+   Renderer
+===================================== */
+
+const renderer =
+    new THREE.WebGLRenderer({
+        antialias:true
+    });
+
+renderer.setPixelRatio(
+    Math.min(
+        window.devicePixelRatio,
+        2
+    )
+);
+
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
+
+document
+    .getElementById("earth")
+    .appendChild(
+        renderer.domElement
+    );
+
+
+/* =====================================
+   خريطة داخلية
+===================================== */
+
+const canvas =
+    document.createElement("canvas");
+
+canvas.width = 1800;
+canvas.height = 1800;
+
+const ctx =
+    canvas.getContext("2d");
+
+
+/* =====================================
+   البحر
+===================================== */
+
+const ocean =
+    ctx.createLinearGradient(
+        0,0,
+        0,1800
+    );
+
+ocean.addColorStop(
+    0,
+    "#35c7ed"
+);
+
+ocean.addColorStop(
+    0.45,
+    "#087fad"
+);
+
+ocean.addColorStop(
+    1,
+    "#034a6b"
+);
+
+ctx.fillStyle = ocean;
+
+ctx.fillRect(
+    0,0,
+    1800,1800
+);
+
+
+/* =====================================
+   مركز الأرض
+===================================== */
+
+const cx = 900;
+const cy = 900;
+
+const R = 820;
+
+
+/* =====================================
+   قص داخل القرص
+===================================== */
+
+ctx.save();
+
+ctx.beginPath();
+
+ctx.arc(
+    cx,
+    cy,
+    R,
+    0,
+    Math.PI*2
+);
+
+ctx.clip();
+
+
+/* =====================================
+   القارات
+===================================== */
+
+ctx.fillStyle =
+    "#67ad45";
+
+
+/* أمريكا الشمالية */
+
+ctx.beginPath();
+
+ctx.moveTo(180,480);
+ctx.lineTo(270,350);
+ctx.lineTo(420,320);
+ctx.lineTo(540,410);
+ctx.lineTo(510,520);
+ctx.lineTo(420,570);
+ctx.lineTo(330,550);
+ctx.lineTo(250,610);
+ctx.lineTo(180,560);
+
+ctx.closePath();
+
+ctx.fill();
+
+
+/* أمريكا الجنوبية */
+
+ctx.beginPath();
+
+ctx.moveTo(500,700);
+ctx.lineTo(590,730);
+ctx.lineTo(630,850);
+ctx.lineTo(600,1020);
+ctx.lineTo(530,1160);
+ctx.lineTo(460,1080);
+ctx.lineTo(450,930);
+ctx.lineTo(480,800);
+
+ctx.closePath();
+
+ctx.fill();
+
+
+/* أوروبا */
+
+ctx.beginPath();
+
+ctx.moveTo(820,420);
+ctx.lineTo(900,370);
+ctx.lineTo(1000,390);
+ctx.lineTo(1040,450);
+ctx.lineTo(980,500);
+ctx.lineTo(880,490);
+ctx.lineTo(820,450);
+
+ctx.closePath();
+
+ctx.fill();
+
+
+/* آسيا */
+
+ctx.beginPath();
+
+ctx.moveTo(970,390);
+ctx.lineTo(1160,350);
+ctx.lineTo(1360,400);
+ctx.lineTo(1510,510);
+ctx.lineTo(1440,600);
+ctx.lineTo(1280,620);
+ctx.lineTo(1130,560);
+ctx.lineTo(1010,500);
+
+ctx.closePath();
+
+ctx.fill();
+
+
+/* أفريقيا */
+
+ctx.beginPath();
+
+ctx.moveTo(850,540);
+ctx.lineTo(960,550);
+ctx.lineTo(1020,680);
+ctx.lineTo(980,850);
+ctx.lineTo(900,1020);
+ctx.lineTo(820,930);
+ctx.lineTo(790,760);
+
+ctx.closePath();
+
+ctx.fill();
+
+
+/* أستراليا */
+
+ctx.beginPath();
+
+ctx.moveTo(1260,900);
+ctx.lineTo(1390,870);
+ctx.lineTo(1510,930);
+ctx.lineTo(1490,1030);
+ctx.lineTo(1370,1070);
+ctx.lineTo(1260,1010);
+
+ctx.closePath();
+
+ctx.fill();
+
+
+/* =====================================
+   جزر رئيسية
+===================================== */
+
+ctx.fillStyle =
+    "#75b957";
+
+
+function island(x,y,r){
+
+    ctx.beginPath();
+
+    ctx.arc(
+        x,
+        y,
+        r,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+}
+
+
+/* اليابان */
+
+island(
+    1400,
+    560,
+    18
+);
+
+
+/* مدغشقر */
+
+island(
+    1040,
+    900,
+    30
+);
+
+
+/* نيوزيلندا */
+
+island(
+    1510,
+    1120,
+    20
+);
+
+
+/* بريطانيا */
+
+island(
+    800,
+    410,
+    14
+);
+
+
+/* أيسلندا */
+
+island(
+    720,
+    300,
+    12
+);
+
+
+/* =====================================
+   لمعة
+===================================== */
+
+const light =
+    ctx.createRadialGradient(
+        650,
+        500,
+        50,
+        650,
+        500,
+        900
+    );
+
+light.addColorStop(
+    0,
+    "rgba(255,255,255,0.18)"
+);
+
+light.addColorStop(
+    0.5,
+    "rgba(255,255,255,0.04)"
+);
+
+light.addColorStop(
+    1,
+    "rgba(255,255,255,0)"
+);
+
+ctx.fillStyle =
+    light;
+
+ctx.fillRect(
+    0,0,
+    1800,1800
+);
+
+
+ctx.restore();
+
+
+/* =====================================
+   Texture
+===================================== */
+
+const texture =
+    new THREE.CanvasTexture(
+        canvas
+    );
+
+
+/* =====================================
+   الأرض المسطحة
+===================================== */
+
+const geometry =
+    new THREE.CircleGeometry(
+        5,
+        160
+    );
+
+
+const material =
+    new THREE.MeshBasicMaterial({
+        map:texture,
+        side:THREE.DoubleSide
+    });
+
+
+const earth =
+    new THREE.Mesh(
+        geometry,
+        material
+    );
+
+
+earth.rotation.x =
+    -Math.PI/2;
+
+
+scene.add(
+    earth
+);
+
+
+/* =====================================
+   البحر الخارجي
+===================================== */
+
+const outerGeometry =
+    new THREE.CircleGeometry(
+        40,
+        160
+    );
+
+
+const outerMaterial =
+    new THREE.MeshBasicMaterial({
+        color:0x075b7d,
+        side:THREE.DoubleSide
+    });
+
+
+const outerSea =
+    new THREE.Mesh(
+        outerGeometry,
+        outerMaterial
+    );
+
+
+outerSea.rotation.x =
+    -Math.PI/2;
+
+
+outerSea.position.y =
+    -0.04;
+
+
+scene.add(
+    outerSea
+);
+
+
+/* =====================================
+   دوران الأرض
+===================================== */
+
+let dragging = false;
+
+let startX = 0;
+
+let rotation = 0;
+
+
+renderer.domElement.addEventListener(
+    "touchstart",
+    function(e){
+
+        if(e.touches.length === 1){
+
+            dragging = true;
+
+            startX =
+                e.touches[0].clientX;
+        }
+
+    },
+    {passive:false}
+);
+
+
+renderer.domElement.addEventListener(
+    "touchmove",
+    function(e){
+
+        if(
+            !dragging ||
+            e.touches.length !== 1
+        ){
+            return;
+        }
+
+        e.preventDefault();
+
+        const x =
+            e.touches[0].clientX;
+
+        const dx =
+            x - startX;
+
+        rotation +=
+            dx * 0.004;
+
+        earth.rotation.z =
+            rotation;
+
+        startX = x;
+
+    },
+    {passive:false}
+);
+
+
+renderer.domElement.addEventListener(
+    "touchend",
+    function(){
+
+        dragging = false;
+
+    }
+);
+
+
+/* =====================================
+   Zoom
+===================================== */
+
+let oldDistance = null;
+
+
+function getDistance(t){
+
+    const dx =
+        t[0].clientX -
+        t[1].clientX;
+
+    const dy =
+        t[0].clientY -
+        t[1].clientY;
+
+    return Math.sqrt(
+        dx*dx + dy*dy
+    );
+}
+
+
+renderer.domElement.addEventListener(
+    "touchstart",
+    function(e){
+
+        if(e.touches.length === 2){
+
+            oldDistance =
+                getDistance(
+                    e.touches
+                );
+        }
+
+    },
+    {passive:false}
+);
+
+
+renderer.domElement.addEventListener(
+    "touchmove",
+    function(e){
+
+        if(e.touches.length !== 2){
+            return;
+        }
+
+        e.preventDefault();
+
+        const distance =
+            getDistance(
+                e.touches
+            );
+
+        if(oldDistance !== null){
+
+            cameraHeight -=
+                (
+                    distance -
+                    oldDistance
+                ) * 0.025;
+
+            cameraHeight =
+                Math.max(
+                    5,
+                    Math.min(
+                        25,
+                        cameraHeight
+                    )
+                );
+
+            camera.position.y =
+                cameraHeight;
+
+            camera.lookAt(
+                0,0,0
+            );
+        }
+
+        oldDistance =
+            distance;
+
+    },
+    {passive:false}
+);
+
+
+renderer.domElement.addEventListener(
+    "touchend",
+    function(e){
+
+        if(e.touches.length < 2){
+
+            oldDistance = null;
+
+        }
+
+    }
+);
+
+
+/* =====================================
+   الشاشة
+===================================== */
+
+window.addEventListener(
+    "resize",
+    function(){
+
+        camera.aspect =
+            window.innerWidth /
+            window.innerHeight;
+
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(
+            window.innerWidth,
+            window.innerHeight
+        );
+
+    }
+);
+
+
+/* =====================================
+   التشغيل
+===================================== */
+
+function animate(){
+
+    requestAnimationFrame(
+        animate
+    );
+
+    renderer.render(
+        scene,
+        camera
+    );
+
+}
+
+animate();
+
+</script>
+
+</body>
+</html>
