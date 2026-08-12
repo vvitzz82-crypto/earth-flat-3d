@@ -1,71 +1,218 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
+
 <meta charset="UTF-8">
+
 <meta name="viewport"
       content="width=device-width,
-      initial-scale=1.0,
-      maximum-scale=1.0,
-      user-scalable=no">
+               initial-scale=1.0,
+               maximum-scale=1.0,
+               user-scalable=no">
 
-<title>Earth Circle Test</title>
+<title>Blue Circle</title>
 
 <style>
-html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background: #020914;
+
+html,
+body{
+
+    width:100%;
+    height:100%;
+
+    margin:0;
+    padding:0;
+
+    overflow:hidden;
+
+    background:#063b55;
+
 }
 
-#earth {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    touch-action: none;
+#app{
+
+    width:100%;
+    height:100%;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    touch-action:none;
+
 }
 
-.circle {
-    width: 280px;
-    height: 280px;
-    border-radius: 50%;
-    background: radial-gradient(
-        circle at 35% 30%,
-        #35bde8,
-        #087aa8 55%,
-        #034266 100%
-    );
+canvas{
 
-    box-shadow:
-        0 0 25px rgba(40,190,255,0.45),
-        inset -25px -20px 45px rgba(0,0,0,0.35),
-        inset 15px 15px 30px rgba(255,255,255,0.12);
+    display:block;
 
-    flex-shrink: 0;
 }
+
 </style>
+
 </head>
 
 <body>
 
-<div id="earth">
-    <div class="circle"></div>
-</div>
+<div id="app"></div>
 
 <script>
 
-const circle = document.querySelector(".circle");
+/* =========================================
+   Canvas
+========================================= */
+
+const canvas =
+    document.createElement("canvas");
+
+const ctx =
+    canvas.getContext("2d");
+
+document
+    .getElementById("app")
+    .appendChild(canvas);
+
+
+/* =========================================
+   حجم الشاشة
+========================================= */
+
+function resize(){
+
+    canvas.width =
+        window.innerWidth *
+        window.devicePixelRatio;
+
+    canvas.height =
+        window.innerHeight *
+        window.devicePixelRatio;
+
+    canvas.style.width =
+        window.innerWidth + "px";
+
+    canvas.style.height =
+        window.innerHeight + "px";
+
+    draw();
+
+}
+
+
+/* =========================================
+   إعدادات الدائرة
+========================================= */
 
 let scale = 1;
+
+const minScale = 0.5;
+
+const maxScale = 2.5;
+
+
+/* =========================================
+   رسم الدائرة
+========================================= */
+
+function draw(){
+
+    const width =
+        window.innerWidth;
+
+    const height =
+        window.innerHeight;
+
+    ctx.setTransform(
+        window.devicePixelRatio,
+        0,
+        0,
+        window.devicePixelRatio,
+        0,
+        0
+    );
+
+    ctx.clearRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    /* مركز الشاشة */
+
+    const centerX =
+        width / 2;
+
+    const centerY =
+        height / 2;
+
+
+    /* حجم الدائرة */
+
+    const baseRadius =
+        Math.min(
+            width,
+            height
+        ) * 0.30;
+
+    const radius =
+        baseRadius * scale;
+
+
+    /* =====================================
+       الدائرة الزرقاء
+    ===================================== */
+
+    ctx.beginPath();
+
+    ctx.arc(
+        centerX,
+        centerY,
+        radius,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fillStyle =
+        "#087fae";
+
+    ctx.fill();
+
+
+    /* =====================================
+       الإطار الأبيض
+    ===================================== */
+
+    ctx.beginPath();
+
+    ctx.arc(
+        centerX,
+        centerY,
+        radius,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.strokeStyle =
+        "#ffffff";
+
+    ctx.lineWidth =
+        6;
+
+    ctx.stroke();
+
+}
+
+
+/* =========================================
+   التكبير بإصبعين
+========================================= */
+
 let oldDistance = null;
 
 
-/* حساب المسافة بين إصبعين */
-function getDistance(touches) {
+function distance(touches){
 
     const dx =
         touches[0].clientX -
@@ -76,82 +223,114 @@ function getDistance(touches) {
         touches[1].clientY;
 
     return Math.sqrt(
-        dx * dx + dy * dy
+        dx * dx +
+        dy * dy
     );
+
 }
 
 
-/* بداية اللمس */
-circle.addEventListener(
+canvas.addEventListener(
     "touchstart",
-    function(e) {
+    function(e){
 
-        if (e.touches.length === 2) {
+        if(
+            e.touches.length === 2
+        ){
 
             oldDistance =
-                getDistance(e.touches);
+                distance(e.touches);
 
         }
 
     },
-    { passive: false }
+    {passive:false}
 );
 
 
-/* التكبير والتصغير */
-circle.addEventListener(
+canvas.addEventListener(
     "touchmove",
-    function(e) {
+    function(e){
 
-        if (e.touches.length !== 2) {
+        if(
+            e.touches.length !== 2
+        ){
+
             return;
+
         }
 
         e.preventDefault();
 
-        const distance =
-            getDistance(e.touches);
 
-        if (oldDistance !== null) {
+        const newDistance =
+            distance(e.touches);
 
-            const change =
-                distance - oldDistance;
 
-            scale += change * 0.005;
+        if(
+            oldDistance !== null
+        ){
+
+            const difference =
+                newDistance -
+                oldDistance;
+
+
+            scale +=
+                difference * 0.005;
+
 
             scale =
                 Math.max(
-                    0.5,
+                    minScale,
                     Math.min(
-                        2.5,
+                        maxScale,
                         scale
                     )
                 );
 
-            circle.style.transform =
-                "scale(" + scale + ")";
+
+            draw();
 
         }
 
-        oldDistance = distance;
+
+        oldDistance =
+            newDistance;
 
     },
-    { passive: false }
+    {passive:false}
 );
 
 
-/* نهاية اللمس */
-circle.addEventListener(
+canvas.addEventListener(
     "touchend",
-    function(e) {
+    function(e){
 
-        if (e.touches.length < 2) {
-            oldDistance = null;
+        if(
+            e.touches.length < 2
+        ){
+
+            oldDistance =
+                null;
+
         }
 
     },
-    { passive: false }
+    {passive:false}
 );
+
+
+/* =========================================
+   تشغيل
+========================================= */
+
+window.addEventListener(
+    "resize",
+    resize
+);
+
+resize();
 
 </script>
 
