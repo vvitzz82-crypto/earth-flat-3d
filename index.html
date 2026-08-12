@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-
 <meta charset="UTF-8">
 
 <meta name="viewport"
@@ -13,15 +12,14 @@
 <title>Earth Flat Map</title>
 
 <style>
-
-html,
-body{
+html,body{
     width:100%;
     height:100%;
     margin:0;
     padding:0;
     overflow:hidden;
     background:#071522;
+    font-family:Arial,sans-serif;
 }
 
 #earth{
@@ -36,900 +34,444 @@ canvas{
 
 #loading{
     position:fixed;
-    top:50%;
     left:50%;
+    top:50%;
     transform:translate(-50%,-50%);
-
-    padding:12px 18px;
-
-    background:rgba(0,0,0,0.7);
-
+    padding:14px 20px;
+    background:rgba(0,0,0,0.75);
     color:#fff;
-
     border-radius:12px;
-
-    font-family:Arial,sans-serif;
-
     font-size:16px;
-
     z-index:20;
+    text-align:center;
 }
 
 #error{
     display:none;
-
     position:fixed;
-
-    top:50%;
     left:50%;
-
+    top:50%;
     transform:translate(-50%,-50%);
-
     width:80%;
-
-    padding:16px;
-
+    padding:18px;
     background:#6d1111;
-
     color:#fff;
-
     border-radius:12px;
-
     text-align:center;
-
-    font-family:Arial,sans-serif;
-
     z-index:30;
 }
 
+#title{
+    position:fixed;
+    top:12px;
+    left:50%;
+    transform:translateX(-50%);
+    color:white;
+    background:rgba(0,0,0,0.45);
+    padding:8px 14px;
+    border-radius:10px;
+    font-size:15px;
+    z-index:10;
+}
 </style>
-
 </head>
 
 <body>
 
 <div id="earth"></div>
 
+<div id="title">
+    الأرض مسطحة ثلاثية الأبعاد
+</div>
+
 <div id="loading">
     جاري تحميل القارات...
 </div>
 
 <div id="error">
-    تعذر تحميل ملف القارات المحلي.
+    تعذر تحميل ملف القارات.
 </div>
 
-
-<!-- Three.js -->
-
+<!-- المكتبات -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-
-<!-- TopoJSON -->
 
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 
-<!-- D3 Geo -->
-
-<script src="https://cdn.jsdelivr.net/npm/d3-geo@3"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/d3-geo@3/dist/d3-geo.min.js"></script>
 
 <script>
 
-/* =====================================================
-   المشهد
-===================================================== */
+const container = document.getElementById("earth");
+const loading = document.getElementById("loading");
+const errorBox = document.getElementById("error");
 
-const scene =
-    new THREE.Scene();
+/* إنشاء المشهد */
 
-scene.background =
-    new THREE.Color(
-        0x071522
-    );
+const scene = new THREE.Scene();
+
+scene.background = new THREE.Color(0x071522);
 
 
-/* =====================================================
-   الكاميرا
-===================================================== */
+/* الكاميرا */
 
-const camera =
-    new THREE.PerspectiveCamera(
-        45,
-
-        window.innerWidth /
-        window.innerHeight,
-
-        0.1,
-
-        100
-    );
-
-let cameraDistance = 10;
-
-camera.position.set(
-    0,
-    0,
-    cameraDistance
+const camera = new THREE.OrthographicCamera(
+    -1,1,1,-1,0,10
 );
 
-camera.lookAt(
-    0,
-    0,
-    0
-);
+camera.position.z = 5;
 
 
-/* =====================================================
-   Renderer
-===================================================== */
+/* المحرك */
 
-const renderer =
-    new THREE.WebGLRenderer({
-        antialias:true
-    });
+const renderer = new THREE.WebGLRenderer({
+    antialias:true
+});
 
 renderer.setPixelRatio(
-    Math.min(
-        window.devicePixelRatio,
-        3
-    )
+    Math.min(window.devicePixelRatio,2)
 );
 
 renderer.setSize(
-    window.innerWidth,
-    window.innerHeight
+    container.clientWidth,
+    container.clientHeight
 );
 
-renderer.outputColorSpace =
-    THREE.SRGBColorSpace;
+container.appendChild(renderer.domElement);
 
-document
-    .getElementById("earth")
-    .appendChild(
-        renderer.domElement
-    );
 
-
-/* =====================================================
-   Canvas
-===================================================== */
+/* المجموعة التي ستحتوي القارات */
 
-const mapCanvas =
-    document.createElement(
-        "canvas"
-    );
+const landGroup = new THREE.Group();
 
-mapCanvas.width =
-    4096;
+scene.add(landGroup);
 
-mapCanvas.height =
-    4096;
 
-const ctx =
-    mapCanvas.getContext(
-        "2d"
-    );
-
-
-/* =====================================================
-   مركز الدائرة
-===================================================== */
-
-const centerX =
-    2048;
-
-const centerY =
-    2048;
-
-const mapRadius =
-    1900;
-
+/* إسقاط الخريطة */
 
-/* =====================================================
-   البحر
-===================================================== */
+let projection;
 
-const ocean =
-    ctx.createRadialGradient(
-        1300,
-        900,
-        100,
-        centerX,
-        centerY,
-        2900
-    );
+function createProjection(){
 
-ocean.addColorStop(
-    0,
-    "#35c9ee"
-);
+    const width = container.clientWidth;
+    const height = container.clientHeight;
 
-ocean.addColorStop(
-    0.20,
-    "#16a7d5"
-);
+    projection = d3.geoNaturalEarth1()
+        .fitSize(
+            [width * 0.95, height * 0.80],
+            {
+                type:"Sphere"
+            }
+        );
+}
 
-ocean.addColorStop(
-    0.45,
-    "#0a84b2"
-);
 
-ocean.addColorStop(
-    0.70,
-    "#075d86"
-);
+/* رسم مضلع */
 
-ocean.addColorStop(
-    1,
-    "#02334f"
-);
+function drawPolygon(coordinates){
 
-ctx.fillStyle =
-    ocean;
+    const shape = new THREE.Shape();
 
-ctx.fillRect(
-    0,
-    0,
-    4096,
-    4096
-);
+    let first = true;
 
+    for(const point of coordinates){
 
-/* =====================================================
-   قص داخل الدائرة
-===================================================== */
+        const xy = projection(point);
 
-ctx.save();
+        if(!xy) continue;
 
-ctx.beginPath();
+        const x =
+            (xy[0] - container.clientWidth/2)
+            / (container.clientHeight/2);
 
-ctx.arc(
-    centerX,
-    centerY,
-    mapRadius,
-    0,
-    Math.PI * 2
-);
+        const y =
+            -(xy[1] - container.clientHeight/2)
+            / (container.clientHeight/2);
 
-ctx.clip();
+        if(first){
 
+            shape.moveTo(x,y);
 
-/* =====================================================
-   الإسقاط الجغرافي
-===================================================== */
+            first = false;
 
-const projection =
-    d3.geoAzimuthalEquidistant()
-      .rotate([
-          0,
-          -90
-      ])
-      .translate([
-          centerX,
-          centerY
-      ])
-      .scale(
-          1150
-      );
+        }else{
 
-
-/* =====================================================
-   مسار الخريطة
-===================================================== */
-
-const path =
-    d3.geoPath(
-        projection,
-        ctx
-    );
-
-
-/* =====================================================
-   شبكة خفيفة
-===================================================== */
-
-ctx.save();
-
-ctx.strokeStyle =
-    "rgba(220,245,255,0.13)";
-
-ctx.lineWidth =
-    3;
-
-const graticule =
-    d3.geoGraticule()
-      .step([
-          15,
-          15
-      ]);
-
-ctx.beginPath();
-
-path(
-    graticule()
-);
-
-ctx.stroke();
-
-ctx.restore();
-
-
-/* =====================================================
-   Texture
-===================================================== */
-
-const texture =
-    new THREE.CanvasTexture(
-        mapCanvas
-    );
-
-texture.colorSpace =
-    THREE.SRGBColorSpace;
-
-texture.anisotropy =
-    renderer
-        .capabilities
-        .getMaxAnisotropy();
-
-texture.minFilter =
-    THREE.LinearMipmapLinearFilter;
-
-texture.magFilter =
-    THREE.LinearFilter;
-
-
-/* =====================================================
-   القرص
-===================================================== */
-
-const earthGeometry =
-    new THREE.CircleGeometry(
-        5,
-        512
-    );
-
-const earthMaterial =
-    new THREE.MeshBasicMaterial({
-
-        map:
-            texture,
-
-        side:
-            THREE.DoubleSide
-
-    });
-
-const earth =
-    new THREE.Mesh(
-        earthGeometry,
-        earthMaterial
-    );
-
-scene.add(
-    earth
-);
-
-
-/* =====================================================
-   الحافة البيضاء
-===================================================== */
-
-const borderGeometry =
-    new THREE.RingGeometry(
-        5.00,
-        5.08,
-        512
-    );
-
-const borderMaterial =
-    new THREE.MeshBasicMaterial({
-
-        color:
-            0xffffff,
-
-        side:
-            THREE.DoubleSide
-
-    });
-
-const border =
-    new THREE.Mesh(
-        borderGeometry,
-        borderMaterial
-    );
-
-border.position.z =
-    0.03;
-
-scene.add(
-    border
-);
-
-
-/* =====================================================
-   تحميل الملف المحلي
-===================================================== */
-
-fetch(
-    "./land-50m.json"
-)
-
-.then(
-    response => {
-
-        if(
-            !response.ok
-        ){
-
-            throw new Error(
-                "land-50m.json not found"
-            );
-
+            shape.lineTo(x,y);
         }
+    }
 
-        return response.json();
+    if(first) return;
+
+
+    const geometry =
+        new THREE.ShapeGeometry(shape);
+
+
+    const material =
+        new THREE.MeshBasicMaterial({
+            color:0x4fa3d1,
+            side:THREE.DoubleSide
+        });
+
+
+    const mesh =
+        new THREE.Mesh(
+            geometry,
+            material
+        );
+
+
+    landGroup.add(mesh);
+}
+
+
+/* رسم القارات */
+
+function drawGeometry(geometry){
+
+    if(geometry.type === "Polygon"){
+
+        for(const ring of geometry.coordinates){
+
+            drawPolygon(ring);
+        }
 
     }
-)
 
-.then(
-    world => {
 
-        if(
-            !world.objects ||
-            !world.objects.land
-        ){
+    if(geometry.type === "MultiPolygon"){
+
+        for(const polygon of geometry.coordinates){
+
+            for(const ring of polygon){
+
+                drawPolygon(ring);
+            }
+        }
+    }
+}
+
+
+/* تحميل ملف القارات المحلي */
+
+async function loadLand(){
+
+    try{
+
+        loading.style.display = "block";
+
+        errorBox.style.display = "none";
+
+
+        /*
+         * مهم جداً:
+         * الملف موجود داخل نفس مستودع GitHub
+         */
+
+        const response =
+            await fetch("./land-50m.json");
+
+
+        if(!response.ok){
 
             throw new Error(
-                "Invalid TopoJSON"
+                "HTTP " + response.status
             );
-
         }
+
+
+        const topology =
+            await response.json();
+
+
+        /*
+         * نأخذ أول مجموعة جغرافية
+         * موجودة داخل ملف TopoJSON
+         */
+
+        const objectName =
+            Object.keys(topology.objects)[0];
 
 
         const land =
             topojson.feature(
-                world,
-                world.objects.land
+                topology,
+                topology.objects[objectName]
             );
 
 
-        /* =============================================
-           القارات والجزر
-        ============================================= */
-
-        ctx.save();
-
-        ctx.fillStyle =
-            "#67b34e";
-
-        ctx.strokeStyle =
-            "#d5eca2";
-
-        ctx.lineWidth =
-            4;
+        createProjection();
 
 
-        ctx.beginPath();
+        /* تنظيف أي رسم قديم */
 
-        path(
-            land
-        );
+        while(landGroup.children.length > 0){
 
-        ctx.fill();
-
-        ctx.stroke();
-
-        ctx.restore();
-
-
-        /* =============================================
-           تظليل بسيط لليابسة
-        ============================================= */
-
-        ctx.save();
-
-        ctx.beginPath();
-
-        path(
-            land
-        );
-
-        ctx.clip();
-
-
-        const landLight =
-            ctx.createRadialGradient(
-                1250,
-                850,
-                60,
-                1250,
-                850,
-                2200
+            landGroup.remove(
+                landGroup.children[0]
             );
-
-        landLight.addColorStop(
-            0,
-            "rgba(255,255,220,0.25)"
-        );
-
-        landLight.addColorStop(
-            0.4,
-            "rgba(255,255,255,0.07)"
-        );
-
-        landLight.addColorStop(
-            1,
-            "rgba(255,255,255,0)"
-        );
-
-        ctx.fillStyle =
-            landLight;
-
-        ctx.fillRect(
-            0,
-            0,
-            4096,
-            4096
-        );
-
-        ctx.restore();
-
-
-        /* =============================================
-           لمعان البحر
-        ============================================= */
-
-        ctx.save();
-
-        ctx.beginPath();
-
-        ctx.arc(
-            centerX,
-            centerY,
-            mapRadius,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.clip();
-
-
-        const waterLight =
-            ctx.createRadialGradient(
-                1100,
-                700,
-                80,
-                1100,
-                700,
-                2400
-            );
-
-        waterLight.addColorStop(
-            0,
-            "rgba(255,255,255,0.12)"
-        );
-
-        waterLight.addColorStop(
-            0.45,
-            "rgba(255,255,255,0.035)"
-        );
-
-        waterLight.addColorStop(
-            1,
-            "rgba(255,255,255,0)"
-        );
-
-        ctx.fillStyle =
-            waterLight;
-
-        ctx.fillRect(
-            0,
-            0,
-            4096,
-            4096
-        );
-
-        ctx.restore();
-
-
-        /* =============================================
-           تحديث Texture
-        ============================================= */
-
-        texture.needsUpdate =
-            true;
-
-
-        document
-            .getElementById("loading")
-            .style.display =
-                "none";
-
-    }
-)
-
-.catch(
-    error => {
-
-        console.error(
-            error
-        );
-
-        document
-            .getElementById("loading")
-            .style.display =
-                "none";
-
-        document
-            .getElementById("error")
-            .style.display =
-                "block";
-
-    }
-);
-
-
-/* =====================================================
-   دوران أفقي فقط
-===================================================== */
-
-let dragging =
-    false;
-
-let previousX =
-    0;
-
-let rotation =
-    0;
-
-
-renderer.domElement.addEventListener(
-    "touchstart",
-    function(e){
-
-        if(
-            e.touches.length === 1
-        ){
-
-            dragging =
-                true;
-
-            previousX =
-                e.touches[0].clientX;
-
         }
 
-    },
-    {
-        passive:false
-    }
-);
 
+        /* رسم القارات */
 
-renderer.domElement.addEventListener(
-    "touchmove",
-    function(e){
+        if(land.features){
 
-        if(
-            !dragging ||
-            e.touches.length !== 1
-        ){
+            for(const feature of land.features){
 
-            return;
+                drawGeometry(feature.geometry);
+            }
 
+        }else{
+
+            drawGeometry(land.geometry);
         }
 
-        e.preventDefault();
+
+        loading.style.display = "none";
 
 
-        const x =
-            e.touches[0].clientX;
+    }catch(e){
 
+        console.error(e);
 
-        const dx =
-            x - previousX;
+        loading.style.display = "none";
 
+        errorBox.style.display = "block";
 
-        rotation +=
-            dx * 0.005;
-
-
-        earth.rotation.z =
-            rotation;
-
-        border.rotation.z =
-            rotation;
-
-
-        previousX =
-            x;
-
-    },
-    {
-        passive:false
+        errorBox.innerHTML =
+            "تعذر تحميل القارات.<br><br>" +
+            "تأكد أن ملف land-50m.json موجود في نفس المشروع.";
     }
-);
-
-
-renderer.domElement.addEventListener(
-    "touchend",
-    function(){
-
-        dragging =
-            false;
-
-    }
-);
-
-
-/* =====================================================
-   Zoom واسع
-===================================================== */
-
-let oldDistance =
-    null;
-
-
-function getDistance(
-    touches
-){
-
-    const dx =
-        touches[0].clientX -
-        touches[1].clientX;
-
-    const dy =
-        touches[0].clientY -
-        touches[1].clientY;
-
-    return Math.sqrt(
-        dx * dx +
-        dy * dy
-    );
-
 }
 
 
+/* السحب */
+
+let dragging = false;
+
+let lastX = 0;
+let lastY = 0;
+
+
 renderer.domElement.addEventListener(
-    "touchstart",
+    "pointerdown",
     function(e){
 
-        if(
-            e.touches.length === 2
-        ){
+        dragging = true;
 
-            oldDistance =
-                getDistance(
-                    e.touches
-                );
-
-        }
-
-    },
-    {
-        passive:false
+        lastX = e.clientX;
+        lastY = e.clientY;
     }
 );
 
 
 renderer.domElement.addEventListener(
-    "touchmove",
+    "pointermove",
     function(e){
 
-        if(
-            e.touches.length !== 2
-        ){
+        if(!dragging) return;
 
-            return;
+        const dx =
+            e.clientX - lastX;
 
-        }
+        const dy =
+            e.clientY - lastY;
+
+        landGroup.position.x +=
+            dx / container.clientHeight;
+
+        landGroup.position.y -=
+            dy / container.clientHeight;
+
+        lastX = e.clientX;
+        lastY = e.clientY;
+    }
+);
+
+
+renderer.domElement.addEventListener(
+    "pointerup",
+    function(){
+
+        dragging = false;
+    }
+);
+
+
+renderer.domElement.addEventListener(
+    "pointercancel",
+    function(){
+
+        dragging = false;
+    }
+);
+
+
+/* التكبير */
+
+renderer.domElement.addEventListener(
+    "wheel",
+    function(e){
 
         e.preventDefault();
 
+        const scale =
+            e.deltaY > 0 ? 0.9 : 1.1;
 
-        const distance =
-            getDistance(
-                e.touches
+        landGroup.scale.multiplyScalar(scale);
+
+        landGroup.scale.x =
+            Math.max(
+                0.4,
+                Math.min(5,landGroup.scale.x)
             );
 
+        landGroup.scale.y =
+            landGroup.scale.x;
 
-        if(
-            oldDistance !== null
-        ){
-
-            cameraDistance -=
-                (
-                    distance -
-                    oldDistance
-                ) * 0.020;
-
-
-            cameraDistance =
-                Math.max(
-                    5,
-                    Math.min(
-                        40,
-                        cameraDistance
-                    )
-                );
-
-
-            camera.position.z =
-                cameraDistance;
-
-        }
-
-
-        oldDistance =
-            distance;
-
+        landGroup.scale.z =
+            landGroup.scale.x;
     },
-    {
-        passive:false
-    }
+    {passive:false}
 );
 
 
-renderer.domElement.addEventListener(
-    "touchend",
-    function(e){
-
-        if(
-            e.touches.length < 2
-        ){
-
-            oldDistance =
-                null;
-
-        }
-
-    }
-);
-
-
-/* =====================================================
-   تغيير حجم الشاشة
-===================================================== */
+/* إعادة ضبط الحجم */
 
 window.addEventListener(
     "resize",
     function(){
 
-        camera.aspect =
-            window.innerWidth /
-            window.innerHeight;
-
-        camera.updateProjectionMatrix();
-
         renderer.setSize(
-            window.innerWidth,
-            window.innerHeight
+            container.clientWidth,
+            container.clientHeight
         );
 
+        createProjection();
     }
 );
 
 
-/* =====================================================
-   التشغيل
-===================================================== */
+/* الحلقة */
 
 function animate(){
 
-    requestAnimationFrame(
-        animate
-    );
+    requestAnimationFrame(animate);
 
     renderer.render(
         scene,
         camera
     );
-
 }
+
+
+/* تشغيل */
+
+loadLand();
 
 animate();
 
 </script>
 
 </body>
-</html>
+      </html>
