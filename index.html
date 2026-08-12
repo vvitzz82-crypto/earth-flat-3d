@@ -1,827 +1,71 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport"
-content="width=device-width,
-initial-scale=1.0,
-maximum-scale=1.0,
-user-scalable=no">
+      content="width=device-width,
+      initial-scale=1.0,
+      maximum-scale=1.0,
+      user-scalable=no">
 
-<title>Earth Flat 3D</title>
+<title>Earth Circle Test</title>
 
 <style>
-
-html,body{
-    width:100%;
-    height:100%;
-    margin:0;
-    padding:0;
-    overflow:hidden;
-    background:#020914;
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #020914;
 }
 
-#earth{
-    width:100%;
-    height:100%;
-    touch-action:none;
+#earth {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
 }
 
-canvas{
-    display:block;
-}
+.circle {
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: radial-gradient(
+        circle at 35% 30%,
+        #35bde8,
+        #087aa8 55%,
+        #034266 100%
+    );
 
+    box-shadow:
+        0 0 25px rgba(40,190,255,0.45),
+        inset -25px -20px 45px rgba(0,0,0,0.35),
+        inset 15px 15px 30px rgba(255,255,255,0.12);
+
+    flex-shrink: 0;
+}
 </style>
-
 </head>
 
 <body>
 
-<div id="earth"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<div id="earth">
+    <div class="circle"></div>
+</div>
 
 <script>
 
-/* =====================================================
-   المشهد
-===================================================== */
+const circle = document.querySelector(".circle");
 
-const scene = new THREE.Scene();
-
-scene.background =
-    new THREE.Color(0x020914);
-
-
-/* =====================================================
-   الكاميرا
-===================================================== */
-
-const camera =
-    new THREE.PerspectiveCamera(
-        45,
-        window.innerWidth /
-        window.innerHeight,
-        0.1,
-        1000
-    );
-
-let cameraDistance = 11;
-
-camera.position.set(
-    0,
-    0,
-    cameraDistance
-);
-
-camera.lookAt(
-    0,
-    0,
-    0
-);
-
-
-/* =====================================================
-   Renderer
-===================================================== */
-
-const renderer =
-    new THREE.WebGLRenderer({
-        antialias:true
-    });
-
-renderer.setPixelRatio(
-    Math.min(
-        window.devicePixelRatio,
-        2
-    )
-);
-
-renderer.setSize(
-    window.innerWidth,
-    window.innerHeight
-);
-
-renderer.outputColorSpace =
-    THREE.SRGBColorSpace;
-
-document
-    .getElementById("earth")
-    .appendChild(
-        renderer.domElement
-    );
-
-
-/* =====================================================
-   النجوم
-===================================================== */
-
-const starGeometry =
-    new THREE.BufferGeometry();
-
-const starCount = 2200;
-
-const starPositions =
-    new Float32Array(
-        starCount * 3
-    );
-
-for(
-    let i = 0;
-    i < starCount;
-    i++
-){
-
-    const r =
-        45 + Math.random() * 100;
-
-    const a =
-        Math.random() *
-        Math.PI * 2;
-
-    const b =
-        Math.acos(
-            2 * Math.random() - 1
-        );
-
-    starPositions[i * 3] =
-        r *
-        Math.sin(b) *
-        Math.cos(a);
-
-    starPositions[i * 3 + 1] =
-        r *
-        Math.sin(b) *
-        Math.sin(a);
-
-    starPositions[i * 3 + 2] =
-        r *
-        Math.cos(b);
-}
-
-starGeometry.setAttribute(
-    "position",
-    new THREE.BufferAttribute(
-        starPositions,
-        3
-    )
-);
-
-const starMaterial =
-    new THREE.PointsMaterial({
-
-        color:0xffffff,
-
-        size:0.10,
-
-        transparent:true,
-
-        opacity:0.8
-    });
-
-const stars =
-    new THREE.Points(
-        starGeometry,
-        starMaterial
-    );
-
-scene.add(stars);
-
-
-/* =====================================================
-   لوحة الخريطة
-===================================================== */
-
-const mapCanvas =
-    document.createElement("canvas");
-
-mapCanvas.width = 2048;
-
-mapCanvas.height = 2048;
-
-const ctx =
-    mapCanvas.getContext("2d");
-
-
-/* =====================================================
-   البحر
-===================================================== */
-
-const ocean =
-    ctx.createRadialGradient(
-        900,
-        700,
-        50,
-        1024,
-        1024,
-        1100
-    );
-
-ocean.addColorStop(
-    0,
-    "#35c9ed"
-);
-
-ocean.addColorStop(
-    0.30,
-    "#0b9ac4"
-);
-
-ocean.addColorStop(
-    0.55,
-    "#08749b"
-);
-
-ocean.addColorStop(
-    0.78,
-    "#04516f"
-);
-
-ocean.addColorStop(
-    1,
-    "#022d49"
-);
-
-ctx.fillStyle =
-    ocean;
-
-ctx.fillRect(
-    0,
-    0,
-    2048,
-    2048
-);
-
-
-/* =====================================================
-   خطوط الطول والعرض
-===================================================== */
-
-ctx.strokeStyle =
-    "rgba(190,235,255,0.14)";
-
-ctx.lineWidth = 3;
-
-
-/* خطوط أفقية */
-
-for(
-    let y = 220;
-    y < 1900;
-    y += 170
-){
-
-    ctx.beginPath();
-
-    ctx.ellipse(
-        1024,
-        1024,
-        850,
-        Math.max(
-            45,
-            Math.abs(y - 1024) * 0.5
-        ),
-        0,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.stroke();
-}
-
-
-/* خطوط عمودية */
-
-for(
-    let x = 220;
-    x < 1900;
-    x += 170
-){
-
-    ctx.beginPath();
-
-    ctx.ellipse(
-        1024,
-        1024,
-        Math.max(
-            45,
-            Math.abs(x - 1024) * 0.55
-        ),
-        850,
-        0,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.stroke();
-}
-
-
-/* =====================================================
-   القارات
-===================================================== */
-
-ctx.fillStyle =
-    "#5da645";
-
-ctx.strokeStyle =
-    "#a8d27d";
-
-ctx.lineWidth = 5;
-
-
-/* أمريكا الشمالية */
-
-ctx.beginPath();
-
-ctx.moveTo(280,500);
-ctx.lineTo(370,360);
-ctx.lineTo(560,300);
-ctx.lineTo(730,370);
-ctx.lineTo(790,500);
-ctx.lineTo(700,620);
-ctx.lineTo(560,620);
-ctx.lineTo(470,720);
-ctx.lineTo(350,670);
-
-ctx.closePath();
-
-ctx.fill();
-
-ctx.stroke();
-
-
-/* أمريكا الجنوبية */
-
-ctx.beginPath();
-
-ctx.moveTo(600,780);
-ctx.lineTo(720,790);
-ctx.lineTo(780,930);
-ctx.lineTo(730,1110);
-ctx.lineTo(650,1300);
-ctx.lineTo(560,1410);
-ctx.lineTo(500,1280);
-ctx.lineTo(500,1090);
-ctx.lineTo(540,900);
-
-ctx.closePath();
-
-ctx.fill();
-
-ctx.stroke();
-
-
-/* أوروبا */
-
-ctx.beginPath();
-
-ctx.moveTo(850,430);
-ctx.lineTo(960,370);
-ctx.lineTo(1090,400);
-ctx.lineTo(1160,480);
-ctx.lineTo(1100,550);
-ctx.lineTo(990,550);
-ctx.lineTo(900,500);
-
-ctx.closePath();
-
-ctx.fill();
-
-ctx.stroke();
-
-
-/* آسيا */
-
-ctx.beginPath();
-
-ctx.moveTo(1050,390);
-ctx.lineTo(1280,330);
-ctx.lineTo(1510,370);
-ctx.lineTo(1740,500);
-ctx.lineTo(1820,630);
-ctx.lineTo(1690,720);
-ctx.lineTo(1490,700);
-ctx.lineTo(1300,630);
-ctx.lineTo(1130,560);
-
-ctx.closePath();
-
-ctx.fill();
-
-ctx.stroke();
-
-
-/* أفريقيا */
-
-ctx.beginPath();
-
-ctx.moveTo(900,600);
-ctx.lineTo(1040,580);
-ctx.lineTo(1120,730);
-ctx.lineTo(1080,920);
-ctx.lineTo(1010,1100);
-ctx.lineTo(920,1190);
-ctx.lineTo(840,1040);
-ctx.lineTo(820,860);
-
-ctx.closePath();
-
-ctx.fill();
-
-ctx.stroke();
-
-
-/* أستراليا */
-
-ctx.beginPath();
-
-ctx.moveTo(1390,1060);
-ctx.lineTo(1560,1010);
-ctx.lineTo(1730,1080);
-ctx.lineTo(1800,1190);
-ctx.lineTo(1710,1310);
-ctx.lineTo(1530,1320);
-ctx.lineTo(1400,1220);
-
-ctx.closePath();
-
-ctx.fill();
-
-ctx.stroke();
-
-
-/* =====================================================
-   الجزر
-===================================================== */
-
-ctx.fillStyle =
-    "#78b95a";
-
-
-function island(
-    x,
-    y,
-    rx,
-    ry
-){
-
-    ctx.beginPath();
-
-    ctx.ellipse(
-        x,
-        y,
-        rx,
-        ry,
-        0,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.fill();
-}
-
-
-/* بريطانيا */
-
-island(
-    825,
-    425,
-    18,
-    35
-);
-
-
-/* أيسلندا */
-
-island(
-    720,
-    310,
-    28,
-    16
-);
-
-
-/* اليابان */
-
-island(
-    1730,
-    680,
-    16,
-    55
-);
-
-
-/* مدغشقر */
-
-island(
-    1130,
-    1100,
-    28,
-    70
-);
-
-
-/* نيوزيلندا */
-
-island(
-    1790,
-    1390,
-    15,
-    45
-);
-
-
-/* جزر صغيرة */
-
-island(1350,760,9,14);
-
-island(1390,790,8,12);
-
-island(430,820,9,15);
-
-island(460,870,7,11);
-
-island(1860,860,8,12);
-
-
-/* =====================================================
-   لمعة على الخريطة
-===================================================== */
-
-const light =
-    ctx.createRadialGradient(
-        680,
-        470,
-        30,
-        680,
-        470,
-        1000
-    );
-
-light.addColorStop(
-    0,
-    "rgba(255,255,255,0.24)"
-);
-
-light.addColorStop(
-    0.45,
-    "rgba(255,255,255,0.07)"
-);
-
-light.addColorStop(
-    1,
-    "rgba(255,255,255,0)"
-);
-
-ctx.fillStyle =
-    light;
-
-ctx.fillRect(
-    0,
-    0,
-    2048,
-    2048
-);
-
-
-/* =====================================================
-   Texture
-===================================================== */
-
-const texture =
-    new THREE.CanvasTexture(
-        mapCanvas
-    );
-
-texture.colorSpace =
-    THREE.SRGBColorSpace;
-
-
-/* =====================================================
-   القرص المسطح
-===================================================== */
-
-const diskGeometry =
-    new THREE.CylinderGeometry(
-        5,
-        5,
-        0.32,
-        192,
-        1,
-        false
-    );
-
-
-/* جوانب القرص */
-
-const sideMaterial =
-    new THREE.MeshPhongMaterial({
-
-        color:0x073a52,
-
-        shininess:40
-    });
-
-
-/* سطح الأرض */
-
-const topMaterial =
-    new THREE.MeshPhongMaterial({
-
-        map:texture,
-
-        shininess:45
-    });
-
-
-/* أسفل القرص */
-
-const bottomMaterial =
-    new THREE.MeshPhongMaterial({
-
-        color:0x021d30
-    });
-
-
-const earth =
-    new THREE.Mesh(
-        diskGeometry,
-        [
-            sideMaterial,
-            topMaterial,
-            bottomMaterial
-        ]
-    );
-
-
-/*
-   محور القرص يكون باتجاه الكاميرا
-   ولا نغير محور الميل بعد ذلك
-*/
-
-earth.rotation.x =
-    Math.PI / 2;
-
-scene.add(earth);
-
-
-/* =====================================================
-   حافة القرص
-===================================================== */
-
-const rimGeometry =
-    new THREE.TorusGeometry(
-        5.02,
-        0.12,
-        20,
-        192
-    );
-
-const rimMaterial =
-    new THREE.MeshPhongMaterial({
-
-        color:0x8edfff,
-
-        shininess:100
-    });
-
-const rim =
-    new THREE.Mesh(
-        rimGeometry,
-        rimMaterial
-    );
-
-rim.position.z =
-    0.18;
-
-scene.add(rim);
-
-
-/* =====================================================
-   ضوء الشمس
-===================================================== */
-
-const sun =
-    new THREE.DirectionalLight(
-        0xffffff,
-        2.5
-    );
-
-sun.position.set(
-    6,
-    7,
-    10
-);
-
-scene.add(sun);
-
-
-/* =====================================================
-   الإضاءة العامة
-===================================================== */
-
-const ambient =
-    new THREE.AmbientLight(
-        0x4d8ba8,
-        0.55
-    );
-
-scene.add(ambient);
-
-
-/* =====================================================
-   دوران أفقي فقط
-===================================================== */
-
-let dragging = false;
-
-let lastX = 0;
-
-
-/* بداية اللمس */
-
-renderer.domElement.addEventListener(
-    "touchstart",
-    function(e){
-
-        if(
-            e.touches.length === 1
-        ){
-
-            dragging = true;
-
-            lastX =
-                e.touches[0].clientX;
-        }
-
-    },
-    {passive:false}
-);
-
-
-/* حركة الإصبع */
-
-renderer.domElement.addEventListener(
-    "touchmove",
-    function(e){
-
-        if(
-            !dragging ||
-            e.touches.length !== 1
-        ){
-            return;
-        }
-
-        e.preventDefault();
-
-        const x =
-            e.touches[0].clientX;
-
-        const dx =
-            x - lastX;
-
-
-        /*
-           الدوران حول محور القرص فقط
-        */
-
-        earth.rotation.z +=
-            dx * 0.005;
-
-        rim.rotation.z =
-            earth.rotation.z;
-
-
-        lastX = x;
-
-    },
-    {passive:false}
-);
-
-
-/* نهاية اللمس */
-
-renderer.domElement.addEventListener(
-    "touchend",
-    function(){
-
-        dragging = false;
-
-    }
-);
-
-
-/* =====================================================
-   التكبير بإصبعين
-===================================================== */
-
+let scale = 1;
 let oldDistance = null;
 
 
-function getDistance(touches){
+/* حساب المسافة بين إصبعين */
+function getDistance(touches) {
 
     const dx =
         touches[0].clientX -
@@ -832,171 +76,84 @@ function getDistance(touches){
         touches[1].clientY;
 
     return Math.sqrt(
-        dx * dx +
-        dy * dy
+        dx * dx + dy * dy
     );
 }
 
 
-/* بداية التكبير */
-
-renderer.domElement.addEventListener(
+/* بداية اللمس */
+circle.addEventListener(
     "touchstart",
-    function(e){
+    function(e) {
 
-        if(
-            e.touches.length === 2
-        ){
+        if (e.touches.length === 2) {
 
             oldDistance =
-                getDistance(
-                    e.touches
-                );
+                getDistance(e.touches);
+
         }
 
     },
-    {passive:false}
+    { passive: false }
 );
 
 
-/* حركة التكبير */
-
-renderer.domElement.addEventListener(
+/* التكبير والتصغير */
+circle.addEventListener(
     "touchmove",
-    function(e){
+    function(e) {
 
-        if(
-            e.touches.length !== 2
-        ){
+        if (e.touches.length !== 2) {
             return;
         }
 
         e.preventDefault();
 
         const distance =
-            getDistance(
-                e.touches
-            );
+            getDistance(e.touches);
 
+        if (oldDistance !== null) {
 
-        if(
-            oldDistance !== null
-        ){
+            const change =
+                distance - oldDistance;
 
-            cameraDistance -=
-                (
-                    distance -
-                    oldDistance
-                ) * 0.018;
+            scale += change * 0.005;
 
-
-            cameraDistance =
+            scale =
                 Math.max(
-                    7,
+                    0.5,
                     Math.min(
-                        18,
-                        cameraDistance
+                        2.5,
+                        scale
                     )
                 );
 
+            circle.style.transform =
+                "scale(" + scale + ")";
 
-            camera.position.z =
-                cameraDistance;
         }
 
-
-        oldDistance =
-            distance;
+        oldDistance = distance;
 
     },
-    {passive:false}
+    { passive: false }
 );
 
 
-/* نهاية التكبير */
-
-renderer.domElement.addEventListener(
+/* نهاية اللمس */
+circle.addEventListener(
     "touchend",
-    function(e){
+    function(e) {
 
-        if(
-            e.touches.length < 2
-        ){
-
-            oldDistance =
-                null;
+        if (e.touches.length < 2) {
+            oldDistance = null;
         }
 
-    }
-);
-
-
-/* =====================================================
-   التشغيل
-===================================================== */
-
-function animate(){
-
-    requestAnimationFrame(
-        animate
-    );
-
-
-    /*
-       دوران تلقائي أفقي فقط
-    */
-
-    if(!dragging){
-
-        earth.rotation.z +=
-            0.0004;
-
-        rim.rotation.z =
-            earth.rotation.z;
-    }
-
-
-    /*
-       حركة النجوم ببطء
-    */
-
-    stars.rotation.y +=
-        0.00003;
-
-
-    renderer.render(
-        scene,
-        camera
-    );
-
-}
-
-animate();
-
-
-/* =====================================================
-   تغيير حجم الشاشة
-===================================================== */
-
-window.addEventListener(
-    "resize",
-    function(){
-
-        camera.aspect =
-            window.innerWidth /
-            window.innerHeight;
-
-        camera.updateProjectionMatrix();
-
-        renderer.setSize(
-            window.innerWidth,
-            window.innerHeight
-        );
-
-    }
+    },
+    { passive: false }
 );
 
 </script>
 
 </body>
-    </html>
+</html>
