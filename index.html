@@ -10,7 +10,7 @@ initial-scale=1.0,
 maximum-scale=1.0,
 user-scalable=no">
 
-<title>Earth Graphic 3D</title>
+<title>Earth Flat 3D</title>
 
 <style>
 
@@ -20,7 +20,7 @@ html,body{
     margin:0;
     padding:0;
     overflow:hidden;
-    background:#010711;
+    background:#020914;
 }
 
 #earth{
@@ -52,7 +52,7 @@ canvas{
 const scene = new THREE.Scene();
 
 scene.background =
-    new THREE.Color(0x010711);
+    new THREE.Color(0x020914);
 
 
 /* =====================================================
@@ -68,19 +68,15 @@ const camera =
         1000
     );
 
-let distance = 12;
+let cameraDistance = 12;
 
 camera.position.set(
     0,
     0,
-    distance
+    cameraDistance
 );
 
-camera.lookAt(
-    0,
-    0,
-    0
-);
+camera.lookAt(0,0,0);
 
 
 /* =====================================================
@@ -108,97 +104,91 @@ renderer.outputColorSpace =
     THREE.SRGBColorSpace;
 
 document
-.getElementById("earth")
-.appendChild(
-    renderer.domElement
-);
+    .getElementById("earth")
+    .appendChild(
+        renderer.domElement
+    );
 
 
 /* =====================================================
-   نجوم
+   النجوم
 ===================================================== */
 
-const starsGeometry =
+const starGeometry =
     new THREE.BufferGeometry();
 
 const starCount = 2200;
 
-const positions =
+const starPositions =
     new Float32Array(
         starCount * 3
     );
 
-for(
-    let i = 0;
-    i < starCount;
-    i++
-){
+for(let i=0;i<starCount;i++){
 
-    const r =
-        60 + Math.random()*90;
+    const radius =
+        45 + Math.random()*100;
 
-    const a =
+    const theta =
         Math.random()*Math.PI*2;
 
-    const b =
+    const phi =
         Math.acos(
             2*Math.random()-1
         );
 
-    positions[i*3] =
-        r *
-        Math.sin(b) *
-        Math.cos(a);
+    starPositions[i*3] =
+        radius *
+        Math.sin(phi) *
+        Math.cos(theta);
 
-    positions[i*3+1] =
-        r *
-        Math.sin(b) *
-        Math.sin(a);
+    starPositions[i*3+1] =
+        radius *
+        Math.sin(phi) *
+        Math.sin(theta);
 
-    positions[i*3+2] =
-        r *
-        Math.cos(b);
+    starPositions[i*3+2] =
+        radius *
+        Math.cos(phi);
 }
 
-starsGeometry.setAttribute(
+starGeometry.setAttribute(
     "position",
     new THREE.BufferAttribute(
-        positions,
+        starPositions,
         3
     )
 );
 
-const starsMaterial =
+const starMaterial =
     new THREE.PointsMaterial({
         color:0xffffff,
-        size:0.12,
+        size:0.10,
         transparent:true,
-        opacity:0.85
+        opacity:0.8
     });
 
 const stars =
     new THREE.Points(
-        starsGeometry,
-        starsMaterial
+        starGeometry,
+        starMaterial
     );
 
-scene.add(
-    stars
-);
+scene.add(stars);
 
 
 /* =====================================================
-   خريطة عالية الدقة
+   خريطة القرص
 ===================================================== */
 
-const canvas =
+const mapCanvas =
     document.createElement("canvas");
 
-canvas.width = 4096;
-canvas.height = 2048;
+mapCanvas.width = 2048;
+mapCanvas.height = 2048;
 
 const ctx =
-    canvas.getContext("2d");
+    mapCanvas.getContext("2d");
 
 
 /* =====================================================
@@ -206,36 +196,33 @@ const ctx =
 ===================================================== */
 
 const ocean =
-    ctx.createLinearGradient(
-        0,
-        0,
-        0,
-        2048
+    ctx.createRadialGradient(
+        1024,
+        900,
+        100,
+        1024,
+        1024,
+        1050
     );
 
 ocean.addColorStop(
     0,
-    "#159ac7"
+    "#27b8df"
 );
 
 ocean.addColorStop(
-    0.25,
+    0.45,
     "#087da8"
 );
 
 ocean.addColorStop(
-    0.55,
-    "#07557d"
-);
-
-ocean.addColorStop(
-    0.8,
-    "#063b61"
+    0.75,
+    "#045274"
 );
 
 ocean.addColorStop(
     1,
-    "#021b35"
+    "#022f50"
 );
 
 ctx.fillStyle =
@@ -244,63 +231,55 @@ ctx.fillStyle =
 ctx.fillRect(
     0,
     0,
-    4096,
+    2048,
     2048
 );
 
 
 /* =====================================================
-   شبكة جغرافية
+   شبكة خطوط الطول والعرض
 ===================================================== */
 
 ctx.strokeStyle =
-    "rgba(170,225,255,0.16)";
+    "rgba(180,235,255,0.14)";
 
-ctx.lineWidth = 2;
+ctx.lineWidth = 3;
 
 
-/* خطوط العرض */
+/* خطوط أفقية */
 
-for(
-    let y = 170;
-    y < 2048;
-    y += 170
-){
+for(let y=180;y<1900;y+=170){
 
     ctx.beginPath();
 
-    ctx.moveTo(
+    ctx.ellipse(
+        1024,
+        1024,
+        820,
+        Math.abs(y-1024)*0.45 + 40,
         0,
-        y
-    );
-
-    ctx.lineTo(
-        4096,
-        y
+        0,
+        Math.PI*2
     );
 
     ctx.stroke();
 }
 
 
-/* خطوط الطول */
+/* خطوط عمودية */
 
-for(
-    let x = 170;
-    x < 4096;
-    x += 170
-){
+for(let x=220;x<1900;x+=170){
 
     ctx.beginPath();
 
-    ctx.moveTo(
-        x,
-        0
-    );
-
-    ctx.lineTo(
-        x,
-        2048
+    ctx.ellipse(
+        1024,
+        1024,
+        Math.abs(x-1024)*0.55 + 35,
+        820,
+        0,
+        0,
+        Math.PI*2
     );
 
     ctx.stroke();
@@ -312,29 +291,27 @@ for(
 ===================================================== */
 
 ctx.fillStyle =
-    "#4f9b48";
+    "#62a944";
 
 ctx.strokeStyle =
-    "#b5dc91";
+    "#9bce73";
 
-ctx.lineWidth = 4;
+ctx.lineWidth = 5;
 
 
 /* أمريكا الشمالية */
 
 ctx.beginPath();
 
-ctx.moveTo(350,500);
-ctx.lineTo(470,390);
-ctx.lineTo(650,350);
-ctx.lineTo(820,420);
-ctx.lineTo(930,520);
-ctx.lineTo(850,650);
-ctx.lineTo(720,680);
-ctx.lineTo(620,760);
-ctx.lineTo(480,700);
-ctx.lineTo(390,620);
-
+ctx.moveTo(300,500);
+ctx.lineTo(390,350);
+ctx.lineTo(600,300);
+ctx.lineTo(760,390);
+ctx.lineTo(720,530);
+ctx.lineTo(620,610);
+ctx.lineTo(520,590);
+ctx.lineTo(430,700);
+ctx.lineTo(340,650);
 ctx.closePath();
 
 ctx.fill();
@@ -345,15 +322,14 @@ ctx.stroke();
 
 ctx.beginPath();
 
-ctx.moveTo(900,820);
-ctx.lineTo(1050,790);
-ctx.lineTo(1130,900);
-ctx.lineTo(1100,1080);
-ctx.lineTo(1030,1260);
-ctx.lineTo(930,1400);
-ctx.lineTo(850,1280);
-ctx.lineTo(830,1120);
-ctx.lineTo(860,970);
+ctx.moveTo(600,760);
+ctx.lineTo(720,780);
+ctx.lineTo(770,950);
+ctx.lineTo(720,1160);
+ctx.lineTo(620,1390);
+ctx.lineTo(530,1260);
+ctx.lineTo(510,1080);
+ctx.lineTo(550,900);
 
 ctx.closePath();
 
@@ -365,13 +341,13 @@ ctx.stroke();
 
 ctx.beginPath();
 
-ctx.moveTo(1770,480);
-ctx.lineTo(1880,410);
-ctx.lineTo(2020,420);
-ctx.lineTo(2130,480);
-ctx.lineTo(2070,550);
-ctx.lineTo(1920,560);
-ctx.lineTo(1810,530);
+ctx.moveTo(900,440);
+ctx.lineTo(1010,370);
+ctx.lineTo(1130,410);
+ctx.lineTo(1180,490);
+ctx.lineTo(1100,550);
+ctx.lineTo(980,530);
+ctx.lineTo(900,490);
 
 ctx.closePath();
 
@@ -383,17 +359,14 @@ ctx.stroke();
 
 ctx.beginPath();
 
-ctx.moveTo(2020,430);
-ctx.lineTo(2250,350);
-ctx.lineTo(2550,370);
-ctx.lineTo(2850,450);
-ctx.lineTo(3160,560);
-ctx.lineTo(3300,700);
-ctx.lineTo(3150,790);
-ctx.lineTo(2860,760);
-ctx.lineTo(2600,690);
-ctx.lineTo(2300,620);
-ctx.lineTo(2100,550);
+ctx.moveTo(1080,390);
+ctx.lineTo(1310,330);
+ctx.lineTo(1540,400);
+ctx.lineTo(1740,530);
+ctx.lineTo(1680,670);
+ctx.lineTo(1480,700);
+ctx.lineTo(1300,620);
+ctx.lineTo(1150,540);
 
 ctx.closePath();
 
@@ -405,15 +378,13 @@ ctx.stroke();
 
 ctx.beginPath();
 
-ctx.moveTo(1900,650);
-ctx.lineTo(2070,620);
-ctx.lineTo(2180,760);
-ctx.lineTo(2150,950);
-ctx.lineTo(2080,1150);
-ctx.lineTo(1980,1320);
-ctx.lineTo(1880,1190);
-ctx.lineTo(1820,990);
-ctx.lineTo(1840,800);
+ctx.moveTo(900,610);
+ctx.lineTo(1050,590);
+ctx.lineTo(1130,750);
+ctx.lineTo(1080,960);
+ctx.lineTo(990,1160);
+ctx.lineTo(880,1040);
+ctx.lineTo(850,850);
 
 ctx.closePath();
 
@@ -425,13 +396,12 @@ ctx.stroke();
 
 ctx.beginPath();
 
-ctx.moveTo(2860,1120);
-ctx.lineTo(3040,1060);
-ctx.lineTo(3240,1110);
-ctx.lineTo(3350,1230);
-ctx.lineTo(3270,1340);
-ctx.lineTo(3050,1370);
-ctx.lineTo(2880,1290);
+ctx.moveTo(1390,1050);
+ctx.lineTo(1560,1010);
+ctx.lineTo(1740,1090);
+ctx.lineTo(1710,1220);
+ctx.lineTo(1550,1280);
+ctx.lineTo(1400,1200);
 
 ctx.closePath();
 
@@ -443,106 +413,10 @@ ctx.stroke();
    الجزر
 ===================================================== */
 
-function island(
-    x,
-    y,
-    rx,
-    ry
-){
-
-    ctx.beginPath();
-
-    ctx.ellipse(
-        x,
-        y,
-        rx,
-        ry,
-        0,
-        0,
-        Math.PI*2
-    );
-
-    ctx.fill();
-    ctx.stroke();
-
-}
-
-
-/* بريطانيا */
-
-island(
-    1740,
-    430,
-    30,
-    55
-);
-
-
-/* أيسلندا */
-
-island(
-    1580,
-    330,
-    45,
-    25
-);
-
-
-/* اليابان */
-
-island(
-    3250,
-    700,
-    25,
-    70
-);
-
-
-/* مدغشقر */
-
-island(
-    2220,
-    1160,
-    35,
-    90
-);
-
-
-/* نيوزيلندا */
-
-island(
-    3440,
-    1450,
-    25,
-    70
-);
-
-
-/* =====================================================
-   مناطق خضراء إضافية
-===================================================== */
-
 ctx.fillStyle =
-    "rgba(115,180,70,0.65)";
+    "#79b957";
 
-
-for(
-    let i = 0;
-    i < 180;
-    i++
-){
-
-    const x =
-        300 +
-        Math.random()*3400;
-
-    const y =
-        350 +
-        Math.random()*1100;
-
-    const r =
-        3 +
-        Math.random()*12;
+function island(x,y,r){
 
     ctx.beginPath();
 
@@ -559,42 +433,76 @@ for(
 }
 
 
+/* اليابان */
+
+island(1690,650,22);
+
+
+/* مدغشقر */
+
+island(1150,1060,35);
+
+
+/* بريطانيا */
+
+island(870,430,18);
+
+
+/* أيسلندا */
+
+island(760,300,15);
+
+
+/* نيوزيلندا */
+
+island(1760,1340,25);
+
+
+/* جزر إضافية */
+
+island(1330,760,13);
+island(1370,800,10);
+island(1800,850,12);
+island(430,820,13);
+island(460,880,9);
+
+
 /* =====================================================
-   لمعة المحيط
+   لمعة البحر
 ===================================================== */
 
-const oceanLight =
+const shine =
     ctx.createRadialGradient(
-        1200,
-        450,
+        700,
+        520,
         50,
-        1200,
-        450,
-        1700
+        700,
+        520,
+        1000
     );
 
-oceanLight.addColorStop(
+shine.addColorStop(
     0,
-    "rgba(255,255,255,0.20)"
+    "rgba(255,255,255,0.22)"
 );
 
-oceanLight.addColorStop(
-    0.4,
+shine.addColorStop(
+    0.5,
     "rgba(255,255,255,0.06)"
 );
 
-oceanLight.addColorStop(
+shine.addColorStop(
     1,
     "rgba(255,255,255,0)"
 );
 
 ctx.fillStyle =
-    oceanLight;
+    shine;
 
 ctx.fillRect(
     0,
     0,
-    4096,
+    2048,
     2048
 );
 
@@ -605,7 +513,7 @@ ctx.fillRect(
 
 const texture =
     new THREE.CanvasTexture(
-        canvas
+        mapCanvas
     );
 
 texture.colorSpace =
@@ -613,62 +521,117 @@ texture.colorSpace =
 
 
 /* =====================================================
-   الأرض
+   القرص المسطح ثلاثي الأبعاد
 ===================================================== */
 
-const earthGeometry =
-    new THREE.SphereGeometry(
+const diskGeometry =
+    new THREE.CylinderGeometry(
         5,
-        192,
-        192
+        5,
+        0.28,
+        160,
+        1,
+        false
     );
-
-const earthMaterial =
-    new THREE.MeshPhongMaterial({
-
-        map:
-            texture,
-
-        shininess:
-            25,
-
-        specular:
-            new THREE.Color(
-                0x174b66
-            )
-
-    });
-
-const earth =
-    new THREE.Mesh(
-        earthGeometry,
-        earthMaterial
-    );
-
-scene.add(
-    earth
-);
 
 
 /* =====================================================
-   الشمس
+   مواد القرص
+===================================================== */
+
+const sideMaterial =
+    new THREE.MeshPhongMaterial({
+        color:0x063a55
+    });
+
+
+const topMaterial =
+    new THREE.MeshPhongMaterial({
+        map:texture,
+        shininess:22
+    });
+
+
+const bottomMaterial =
+    new THREE.MeshPhongMaterial({
+        color:0x03283d
+    });
+
+
+const earth =
+    new THREE.Mesh(
+        diskGeometry,
+        [
+            sideMaterial,
+            topMaterial,
+            bottomMaterial
+        ]
+    );
+
+
+/* القرص مواجه للكاميرا */
+
+earth.rotation.x =
+    Math.PI / 2;
+
+
+/* رفع بسيط */
+
+earth.position.z = 0;
+
+scene.add(earth);
+
+
+/* =====================================================
+   حافة جليدية حول القرص
+===================================================== */
+
+const rimGeometry =
+    new THREE.TorusGeometry(
+        5.02,
+        0.12,
+        12,
+        160
+    );
+
+
+const rimMaterial =
+    new THREE.MeshPhongMaterial({
+        color:0x9de9ff,
+        shininess:80
+    });
+
+
+const rim =
+    new THREE.Mesh(
+        rimGeometry,
+        rimMaterial
+    );
+
+
+rim.position.z =
+    0.18;
+
+scene.add(rim);
+
+
+/* =====================================================
+   ضوء الشمس
 ===================================================== */
 
 const sun =
     new THREE.DirectionalLight(
         0xffffff,
-        2.6
+        2.4
     );
 
 sun.position.set(
+    6,
     8,
-    5,
     10
 );
 
-scene.add(
-    sun
-);
+scene.add(sun);
 
 
 /* =====================================================
@@ -677,137 +640,41 @@ scene.add(
 
 const ambient =
     new THREE.AmbientLight(
-        0x477d99,
-        0.5
+        0x4b89a8,
+        0.55
     );
 
-scene.add(
-    ambient
-);
+scene.add(ambient);
 
 
 /* =====================================================
-   الغلاف الجوي
+   الدوران باللمس
 ===================================================== */
 
-const atmosphereGeometry =
-    new THREE.SphereGeometry(
-        5.13,
-        128,
-        128
-    );
+let dragging = false;
 
-const atmosphereMaterial =
-    new THREE.MeshBasicMaterial({
+let previousX = 0;
 
-        color:
-            0x2aaeff,
+let previousY = 0;
 
-        transparent:
-            true,
-
-        opacity:
-            0.12,
-
-        side:
-            THREE.BackSide
-
-    });
-
-const atmosphere =
-    new THREE.Mesh(
-        atmosphereGeometry,
-        atmosphereMaterial
-    );
-
-scene.add(
-    atmosphere
-);
+let rotationSpeed = 0;
 
 
-/* =====================================================
-   اللمعان الخارجي
-===================================================== */
-
-const glowGeometry =
-    new THREE.SphereGeometry(
-        5.25,
-        96,
-        96
-    );
-
-const glowMaterial =
-    new THREE.MeshBasicMaterial({
-
-        color:
-            0x168ed1,
-
-        transparent:
-            true,
-
-        opacity:
-            0.045,
-
-        side:
-            THREE.BackSide
-
-    });
-
-const glow =
-    new THREE.Mesh(
-        glowGeometry,
-        glowMaterial
-    );
-
-scene.add(
-    glow
-);
-
-
-/* =====================================================
-   التحكم باللمس
-===================================================== */
-
-let dragging =
-    false;
-
-let lastX = 0;
-let lastY = 0;
-
-let oldDistance =
-    null;
-
-
-/* دوران */
+/* لمس واحد */
 
 renderer.domElement.addEventListener(
     "touchstart",
     function(e){
 
-        if(
-            e.touches.length === 1
-        ){
+        if(e.touches.length === 1){
 
-            dragging =
-                true;
+            dragging = true;
 
-            lastX =
+            previousX =
                 e.touches[0].clientX;
 
-            lastY =
+            previousY =
                 e.touches[0].clientY;
-
-        }
-
-        if(
-            e.touches.length === 2
-        ){
-
-            oldDistance =
-                getDistance(
-                    e.touches
-                );
-
         }
 
     },
@@ -815,88 +682,59 @@ renderer.domElement.addEventListener(
 );
 
 
-/* حركة */
+/* تحريك */
 
 renderer.domElement.addEventListener(
     "touchmove",
     function(e){
 
+        if(
+            !dragging ||
+            e.touches.length !== 1
+        ){
+            return;
+        }
+
         e.preventDefault();
 
+        const x =
+            e.touches[0].clientX;
 
-        if(
-            e.touches.length === 1 &&
-            dragging
-        ){
+        const y =
+            e.touches[0].clientY;
 
-            const x =
-                e.touches[0].clientX;
+        const dx =
+            x - previousX;
 
-            const y =
-                e.touches[0].clientY;
-
-            const dx =
-                x - lastX;
-
-            const dy =
-                y - lastY;
-
-            earth.rotation.y +=
-                dx * 0.006;
-
-            earth.rotation.x +=
-                dy * 0.004;
-
-            earth.rotation.x =
-                Math.max(
-                    -1.25,
-                    Math.min(
-                        1.25,
-                        earth.rotation.x
-                    )
-                );
-
-            lastX = x;
-            lastY = y;
-
-        }
+        const dy =
+            y - previousY;
 
 
-        if(
-            e.touches.length === 2
-        ){
+        rotationSpeed =
+            dx * 0.005;
 
-            const d =
-                getDistance(
-                    e.touches
-                );
 
-            if(
-                oldDistance !== null
-            ){
+        earth.rotation.z +=
+            rotationSpeed;
 
-                distance -=
-                    (d - oldDistance)
-                    * 0.018;
+        rim.rotation.z =
+            earth.rotation.z;
 
-                distance =
-                    Math.max(
-                        7,
-                        Math.min(
-                            20,
-                            distance
-                        )
-                    );
 
-                camera.position.z =
-                    distance;
+        /*
+           حركة خفيفة للأعلى والأسفل
+        */
 
-            }
+        earth.rotation.y +=
+            dy * 0.0015;
 
-            oldDistance =
-                d;
+        rim.rotation.y =
+            earth.rotation.y;
 
-        }
+
+        previousX = x;
+
+        previousY = y;
 
     },
     {passive:false}
@@ -907,50 +745,119 @@ renderer.domElement.addEventListener(
 
 renderer.domElement.addEventListener(
     "touchend",
-    function(e){
+    function(){
 
-        if(
-            e.touches.length === 0
-        ){
-
-            dragging =
-                false;
-
-        }
-
-        if(
-            e.touches.length < 2
-        ){
-
-            oldDistance =
-                null;
-
-        }
+        dragging = false;
 
     }
 );
 
 
 /* =====================================================
-   حساب المسافة بين إصبعين
+   التكبير بإصبعين
 ===================================================== */
 
-function getDistance(t){
+let oldDistance = null;
+
+
+function getDistance(touches){
 
     const dx =
-        t[0].clientX -
-        t[1].clientX;
+        touches[0].clientX -
+        touches[1].clientX;
 
     const dy =
-        t[0].clientY -
-        t[1].clientY;
+        touches[0].clientY -
+        touches[1].clientY;
 
     return Math.sqrt(
-        dx*dx +
-        dy*dy
+        dx*dx + dy*dy
     );
-
 }
+
+
+/* بداية إصبعين */
+
+renderer.domElement.addEventListener(
+    "touchstart",
+    function(e){
+
+        if(e.touches.length === 2){
+
+            oldDistance =
+                getDistance(
+                    e.touches
+                );
+        }
+
+    },
+    {passive:false}
+);
+
+
+/* تكبير */
+
+renderer.domElement.addEventListener(
+    "touchmove",
+    function(e){
+
+        if(e.touches.length !== 2){
+            return;
+        }
+
+        e.preventDefault();
+
+        const distance =
+            getDistance(
+                e.touches
+            );
+
+        if(oldDistance !== null){
+
+            cameraDistance -=
+                (
+                    distance -
+                    oldDistance
+                ) * 0.018;
+
+
+            cameraDistance =
+                Math.max(
+                    7,
+                    Math.min(
+                        20,
+                        cameraDistance
+                    )
+                );
+
+
+            camera.position.z =
+                cameraDistance;
+
+        }
+
+        oldDistance =
+            distance;
+
+    },
+    {passive:false}
+);
+
+
+/* نهاية إصبعين */
+
+renderer.domElement.addEventListener(
+    "touchend",
+    function(e){
+
+        if(e.touches.length < 2){
+
+            oldDistance = null;
+
+        }
+
+    }
+);
 
 
 /* =====================================================
@@ -963,31 +870,29 @@ function animate(){
         animate
     );
 
-    if(
-        !dragging
-    ){
 
-        earth.rotation.y +=
+    /*
+       دوران تلقائي خفيف
+    */
+
+    if(!dragging){
+
+        earth.rotation.z +=
             0.0005;
 
+        rim.rotation.z =
+            earth.rotation.z;
     }
+
 
     stars.rotation.y +=
         0.00003;
 
-    atmosphere.rotation.copy(
-        earth.rotation
-    );
-
-    glow.rotation.copy(
-        earth.rotation
-    );
 
     renderer.render(
         scene,
         camera
     );
-
 }
 
 animate();
@@ -1018,4 +923,4 @@ window.addEventListener(
 </script>
 
 </body>
-    </html>
+</html>
