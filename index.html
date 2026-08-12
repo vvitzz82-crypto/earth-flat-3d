@@ -1,845 +1,314 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-
 <meta charset="UTF-8">
 
 <meta name="viewport"
-content="width=device-width,
-initial-scale=1.0,
-maximum-scale=1.0,
-user-scalable=no">
+      content="width=device-width,
+      initial-scale=1.0,
+      maximum-scale=5.0,
+      user-scalable=yes">
 
-<title>Earth Flat Map 10m</title>
+<title>الأرض - خريطة ثلاثية الأبعاد</title>
 
 <style>
-
-html,body{
-    width:100%;
-    height:100%;
-    margin:0;
-    padding:0;
-    overflow:hidden;
-    background:#071522;
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #071522;
+    font-family: Arial, sans-serif;
 }
 
-#earth{
-    width:100%;
-    height:100%;
-    touch-action:none;
+#map {
+    width: 100%;
+    height: 100%;
+    touch-action: none;
 }
 
-canvas{
-    display:block;
+svg {
+    width: 100%;
+    height: 100%;
+    display: block;
 }
 
-#loading{
-    position:fixed;
-    left:50%;
-    top:50%;
-    transform:translate(-50%,-50%);
-    z-index:10;
-
-    padding:12px 18px;
-    border-radius:12px;
-
-    background:rgba(0,0,0,0.55);
-    color:#ffffff;
-
-    font-family:Arial,sans-serif;
-    font-size:16px;
-
-    white-space:nowrap;
+.ocean {
+    fill: #087bb5;
 }
 
+.ocean-inner {
+    fill: #0b8dca;
+}
+
+.land {
+    fill: #5fae3e;
+    stroke: #d7efb0;
+    stroke-width: 0.7;
+    vector-effect: non-scaling-stroke;
+}
+
+.graticule {
+    fill: none;
+    stroke: rgba(255,255,255,0.18);
+    stroke-width: 0.6;
+    vector-effect: non-scaling-stroke;
+}
+
+.border {
+    fill: none;
+    stroke: white;
+    stroke-width: 3;
+    vector-effect: non-scaling-stroke;
+}
+
+#loading {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    padding: 14px 20px;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.75);
+    color: white;
+    font-size: 17px;
+    z-index: 20;
+}
+
+#error {
+    display: none;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    max-width: 420px;
+    padding: 18px;
+    border-radius: 14px;
+    background: rgba(120,0,0,0.9);
+    color: white;
+    text-align: center;
+    z-index: 30;
+}
 </style>
 </head>
 
 <body>
 
-<div id="earth"></div>
+<div id="map"></div>
 
 <div id="loading">
-جاري تحميل القارات...
+    جاري تحميل القارات...
 </div>
 
+<div id="error">
+    تعذر تحميل بيانات القارات.<br>
+    تأكد من اتصال الإنترنت ثم أعد تحميل الصفحة.
+</div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/d3-geo@3"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 
 <script>
 
-/* =====================================================
-   المشهد
-===================================================== */
+const map = document.getElementById("map");
+const loading = document.getElementById("loading");
+const errorBox = document.getElementById("error");
 
-const scene =
-    new THREE.Scene();
+let width = window.innerWidth;
+let height = window.innerHeight;
 
-scene.background =
-    new THREE.Color(
-        0x071522
-    );
+const svg = d3.select("#map")
+    .append("svg")
+    .attr("viewBox", `0 0 ${width} ${height}`)
+    .attr("preserveAspectRatio", "xMidYMid meet");
 
+const root = svg.append("g");
 
-/* =====================================================
-   الكاميرا
-===================================================== */
+const ocean = root.append("circle")
+    .attr("class", "ocean");
 
-const camera =
-    new THREE.PerspectiveCamera(
-        45,
-        window.innerWidth /
-        window.innerHeight,
-        0.1,
-        100
-    );
+const oceanInner = root.append("circle")
+    .attr("class", "ocean-inner");
 
-let cameraDistance = 10;
+const grid = root.append("path")
+    .attr("class", "graticule");
 
-camera.position.set(
-    0,
-    0,
-    cameraDistance
-);
+const landGroup = root.append("g");
 
-camera.lookAt(
-    0,
-    0,
-    0
-);
+const border = root.append("circle")
+    .attr("class", "border");
 
+let centerX = width / 2;
+let centerY = height / 2;
 
-/* =====================================================
-   Renderer
-===================================================== */
+let radius = Math.min(width, height) * 0.38;
 
-const renderer =
-    new THREE.WebGLRenderer({
-        antialias:true
-    });
+function resizeMap() {
 
-renderer.setPixelRatio(
-    Math.min(
-        window.devicePixelRatio,
-        3
-    )
-);
+    width = window.innerWidth;
+    height = window.innerHeight;
 
-renderer.setSize(
-    window.innerWidth,
-    window.innerHeight
-);
+    centerX = width / 2;
+    centerY = height / 2;
 
-renderer.outputColorSpace =
-    THREE.SRGBColorSpace;
+    radius = Math.min(width, height) * 0.38;
 
-document
-    .getElementById("earth")
-    .appendChild(
-        renderer.domElement
-    );
+    svg.attr("viewBox", `0 0 ${width} ${height}`);
 
+    ocean
+        .attr("cx", centerX)
+        .attr("cy", centerY)
+        .attr("r", radius);
 
-/* =====================================================
-   لوحة الخريطة
-===================================================== */
+    oceanInner
+        .attr("cx", centerX)
+        .attr("cy", centerY)
+        .attr("r", radius * 0.965);
 
-const mapCanvas =
-    document.createElement(
-        "canvas"
-    );
-
-mapCanvas.width =
-    4096;
-
-mapCanvas.height =
-    4096;
-
-const ctx =
-    mapCanvas.getContext(
-        "2d"
-    );
-
-
-/* =====================================================
-   بحر أزرق واضح
-===================================================== */
-
-const ocean =
-    ctx.createRadialGradient(
-        1450,
-        1000,
-        100,
-        2048,
-        2048,
-        3000
-    );
-
-ocean.addColorStop(
-    0,
-    "#35c8ee"
-);
-
-ocean.addColorStop(
-    0.20,
-    "#16a6d5"
-);
-
-ocean.addColorStop(
-    0.45,
-    "#0a83b2"
-);
-
-ocean.addColorStop(
-    0.70,
-    "#075e87"
-);
-
-ocean.addColorStop(
-    1,
-    "#033653"
-);
-
-ctx.fillStyle =
-    ocean;
-
-ctx.fillRect(
-    0,
-    0,
-    4096,
-    4096
-);
-
-
-/* =====================================================
-   مركز القرص
-===================================================== */
-
-const centerX =
-    2048;
-
-const centerY =
-    2048;
-
-const discRadius =
-    1900;
-
-
-/* =====================================================
-   قص دائري
-===================================================== */
-
-ctx.save();
-
-ctx.beginPath();
-
-ctx.arc(
-    centerX,
-    centerY,
-    discRadius,
-    0,
-    Math.PI * 2
-);
-
-ctx.clip();
-
-
-/* =====================================================
-   إسقاط جغرافي قطبي
-   يعطي توزيعًا قريبًا من الصورة المرجعية
-===================================================== */
-
-const projection =
-    d3.geoAzimuthalEquidistant()
-      .rotate([
-          0,
-          -90
-      ])
-      .translate([
-          centerX,
-          centerY
-      ])
-      .scale(
-          1150
-      );
-
-
-/* =====================================================
-   مسار الرسم
-===================================================== */
-
-const path =
-    d3.geoPath(
-        projection,
-        ctx
-    );
-
-
-/* =====================================================
-   شبكة خفيفة
-===================================================== */
-
-ctx.save();
-
-ctx.strokeStyle =
-    "rgba(220,245,255,0.12)";
-
-ctx.lineWidth =
-    3;
-
-const graticule =
-    d3.geoGraticule()
-      .step([
-          10,
-          10
-      ]);
-
-ctx.beginPath();
-
-path(
-    graticule()
-);
-
-ctx.stroke();
-
-ctx.restore();
-
-
-/* =====================================================
-   Texture قبل تحميل البيانات
-===================================================== */
-
-const texture =
-    new THREE.CanvasTexture(
-        mapCanvas
-    );
-
-texture.colorSpace =
-    THREE.SRGBColorSpace;
-
-texture.anisotropy =
-    renderer
-        .capabilities
-        .getMaxAnisotropy();
-
-texture.minFilter =
-    THREE.LinearMipmapLinearFilter;
-
-texture.magFilter =
-    THREE.LinearFilter;
-
-
-/* =====================================================
-   تحميل اليابسة الحقيقية 10m
-===================================================== */
-
-fetch(
-    "https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/land-10m.json"
-)
-
-.then(
-    response => {
-
-        if(!response.ok){
-
-            throw new Error(
-                "تعذر تحميل الخريطة"
-            );
-
-        }
-
-        return response.json();
-
-    }
-)
-
-.then(
-    world => {
-
-        const land =
-            topojson.feature(
-                world,
-                world.objects.land
-            );
-
-
-        /* =============================================
-           القارات والجزر
-        ============================================= */
-
-        ctx.save();
-
-        ctx.fillStyle =
-            "#68b64d";
-
-        ctx.strokeStyle =
-            "#d8eb9b";
-
-        ctx.lineWidth =
-            4;
-
-
-        ctx.beginPath();
-
-        path(
-            land
-        );
-
-        ctx.fill();
-
-        ctx.stroke();
-
-        ctx.restore();
-
-
-        /* =============================================
-           تظليل بسيط لليابسة
-        ============================================= */
-
-        ctx.save();
-
-        ctx.beginPath();
-
-        path(
-            land
-        );
-
-        ctx.clip();
-
-
-        const landGlow =
-            ctx.createRadialGradient(
-                1300,
-                850,
-                80,
-                1300,
-                850,
-                2100
-            );
-
-        landGlow.addColorStop(
-            0,
-            "rgba(255,255,220,0.28)"
-        );
-
-        landGlow.addColorStop(
-            0.40,
-            "rgba(255,255,255,0.08)"
-        );
-
-        landGlow.addColorStop(
-            1,
-            "rgba(255,255,255,0)"
-        );
-
-        ctx.fillStyle =
-            landGlow;
-
-        ctx.fillRect(
-            0,
-            0,
-            4096,
-            4096
-        );
-
-        ctx.restore();
-
-
-        /* =============================================
-           لمعان خفيف للماء
-        ============================================= */
-
-        const waterGlow =
-            ctx.createRadialGradient(
-                1200,
-                700,
-                50,
-                1200,
-                700,
-                2300
-            );
-
-        waterGlow.addColorStop(
-            0,
-            "rgba(255,255,255,0.14)"
-        );
-
-        waterGlow.addColorStop(
-            0.45,
-            "rgba(255,255,255,0.04)"
-        );
-
-        waterGlow.addColorStop(
-            1,
-            "rgba(255,255,255,0)"
-        );
-
-        ctx.fillStyle =
-            waterGlow;
-
-        ctx.fillRect(
-            0,
-            0,
-            4096,
-            4096
-        );
-
-
-        ctx.restore();
-
-
-        texture.needsUpdate =
-            true;
-
-
-        document
-            .getElementById("loading")
-            .style.display =
-                "none";
-
-    }
-)
-
-.catch(
-    error => {
-
-        console.error(
-            error
-        );
-
-        document
-            .getElementById("loading")
-            .textContent =
-                "تعذر تحميل القارات";
-
-    }
-);
-
-
-/* =====================================================
-   الدائرة المسطحة
-===================================================== */
-
-const diskGeometry =
-    new THREE.CircleGeometry(
-        5,
-        512
-    );
-
-const diskMaterial =
-    new THREE.MeshBasicMaterial({
-
-        map:
-            texture,
-
-        side:
-            THREE.DoubleSide
-
-    });
-
-const earth =
-    new THREE.Mesh(
-        diskGeometry,
-        diskMaterial
-    );
-
-scene.add(
-    earth
-);
-
-
-/* =====================================================
-   الحافة البيضاء
-===================================================== */
-
-const borderGeometry =
-    new THREE.RingGeometry(
-        5.00,
-        5.08,
-        512
-    );
-
-const borderMaterial =
-    new THREE.MeshBasicMaterial({
-
-        color:
-            0xffffff,
-
-        side:
-            THREE.DoubleSide
-
-    });
-
-const border =
-    new THREE.Mesh(
-        borderGeometry,
-        borderMaterial
-    );
-
-border.position.z =
-    0.025;
-
-scene.add(
     border
-);
+        .attr("cx", centerX)
+        .attr("cy", centerY)
+        .attr("r", radius);
 
+    projection
+        .translate([centerX, centerY])
+        .scale(radius);
 
-/* =====================================================
-   دوران أفقي فقط
-===================================================== */
+    drawGrid();
 
-let dragging =
-    false;
-
-let previousX =
-    0;
-
-let rotation =
-    0;
-
-
-renderer.domElement.addEventListener(
-    "touchstart",
-    function(e){
-
-        if(
-            e.touches.length === 1
-        ){
-
-            dragging =
-                true;
-
-            previousX =
-                e.touches[0].clientX;
-
-        }
-
-    },
-    {
-        passive:false
+    if (landData) {
+        drawLand();
     }
-);
-
-
-renderer.domElement.addEventListener(
-    "touchmove",
-    function(e){
-
-        if(
-            !dragging ||
-            e.touches.length !== 1
-        ){
-            return;
-        }
-
-        e.preventDefault();
-
-        const x =
-            e.touches[0].clientX;
-
-        const dx =
-            x - previousX;
-
-        rotation +=
-            dx * 0.005;
-
-        earth.rotation.z =
-            rotation;
-
-        border.rotation.z =
-            rotation;
-
-        previousX =
-            x;
-
-    },
-    {
-        passive:false
-    }
-);
-
-
-renderer.domElement.addEventListener(
-    "touchend",
-    function(){
-
-        dragging =
-            false;
-
-    }
-);
-
-
-/* =====================================================
-   Zoom واسع
-===================================================== */
-
-let oldDistance =
-    null;
-
-
-function getDistance(
-    touches
-){
-
-    const dx =
-        touches[0].clientX -
-        touches[1].clientX;
-
-    const dy =
-        touches[0].clientY -
-        touches[1].clientY;
-
-    return Math.sqrt(
-        dx * dx +
-        dy * dy
-    );
-
 }
 
+const projection = d3.geoAzimuthalEquidistant()
+    .rotate([0, -90])
+    .center([0, 0])
+    .translate([centerX, centerY])
+    .scale(radius);
 
-renderer.domElement.addEventListener(
-    "touchstart",
-    function(e){
+const path = d3.geoPath(projection);
 
-        if(
-            e.touches.length === 2
-        ){
+const graticule = d3.geoGraticule()
+    .step([15, 15]);
 
-            oldDistance =
-                getDistance(
-                    e.touches
-                );
+function drawGrid() {
 
-        }
+    grid
+        .datum(graticule())
+        .attr("d", path);
+}
 
-    },
-    {
-        passive:false
-    }
-);
+let landData = null;
 
+function drawLand() {
 
-renderer.domElement.addEventListener(
-    "touchmove",
-    function(e){
+    landGroup
+        .selectAll("path")
+        .data([landData])
+        .join("path")
+        .attr("class", "land")
+        .attr("d", path);
+}
 
-        if(
-            e.touches.length !== 2
-        ){
-            return;
-        }
+/* =========================
+   تحميل البيانات الجغرافية
+   ========================= */
 
-        e.preventDefault();
+async function loadEarth() {
 
-        const newDistance =
-            getDistance(
-                e.touches
-            );
+    try {
 
+        const controller = new AbortController();
 
-        if(
-            oldDistance !== null
-        ){
+        const timeout = setTimeout(() => {
+            controller.abort();
+        }, 15000);
 
-            cameraDistance -=
-                (
-                    newDistance -
-                    oldDistance
-                ) * 0.020;
-
-
-            cameraDistance =
-                Math.max(
-                    5,
-                    Math.min(
-                        40,
-                        cameraDistance
-                    )
-                );
-
-
-            camera.position.z =
-                cameraDistance;
-
-        }
-
-
-        oldDistance =
-            newDistance;
-
-    },
-    {
-        passive:false
-    }
-);
-
-
-renderer.domElement.addEventListener(
-    "touchend",
-    function(e){
-
-        if(
-            e.touches.length < 2
-        ){
-
-            oldDistance =
-                null;
-
-        }
-
-    }
-);
-
-
-/* =====================================================
-   تغيير حجم الشاشة
-===================================================== */
-
-window.addEventListener(
-    "resize",
-    function(){
-
-        camera.aspect =
-            window.innerWidth /
-            window.innerHeight;
-
-        camera.updateProjectionMatrix();
-
-        renderer.setSize(
-            window.innerWidth,
-            window.innerHeight
+        const response = await fetch(
+            "https://cdn.jsdelivr.net/npm/world-atlas@2/land-50m.json",
+            {
+                signal: controller.signal,
+                cache: "force-cache"
+            }
         );
 
+        clearTimeout(timeout);
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        const world = await response.json();
+
+        if (!world.objects || !world.objects.land) {
+            throw new Error("بيانات القارات غير موجودة");
+        }
+
+        landData = topojson.feature(
+            world,
+            world.objects.land
+        );
+
+        resizeMap();
+
+        loading.style.display = "none";
+
+    } catch (err) {
+
+        console.error(err);
+
+        loading.style.display = "none";
+        errorBox.style.display = "block";
     }
-);
-
-
-/* =====================================================
-   التشغيل
-===================================================== */
-
-function animate(){
-
-    requestAnimationFrame(
-        animate
-    );
-
-    renderer.render(
-        scene,
-        camera
-    );
-
 }
 
-animate();
+/* =========================
+   التكبير والتصغير
+   ========================= */
+
+let zoomLevel = 1;
+
+const zoom = d3.zoom()
+    .scaleExtent([0.35, 3.5])
+    .on("zoom", function(event) {
+
+        zoomLevel = event.transform.k;
+
+        root.attr(
+            "transform",
+            `translate(${event.transform.x},
+                       ${event.transform.y})
+             scale(${event.transform.k})`
+        );
+    });
+
+svg.call(zoom);
+
+/* منع الدوران */
+svg.on("dblclick.zoom", null);
+
+/* بداية أصغر */
+svg.call(
+    zoom.transform,
+    d3.zoomIdentity
+        .translate(centerX, centerY)
+        .scale(0.78)
+        .translate(-centerX, -centerY)
+);
+
+/* =========================
+   تشغيل
+   ========================= */
+
+window.addEventListener("resize", resizeMap);
+
+resizeMap();
+loadEarth();
 
 </script>
 
 </body>
-    </html>
+</html>
