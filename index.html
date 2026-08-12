@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
+
 <meta charset="UTF-8">
 
 <meta name="viewport"
@@ -9,7 +10,7 @@ initial-scale=1.0,
 maximum-scale=1.0,
 user-scalable=no">
 
-<title>Earth Circle Map</title>
+<title>Earth Circle High Detail</title>
 
 <style>
 
@@ -47,7 +48,8 @@ canvas{
    المشهد
 ===================================================== */
 
-const scene = new THREE.Scene();
+const scene =
+    new THREE.Scene();
 
 scene.background =
     new THREE.Color(0x071522);
@@ -74,7 +76,11 @@ camera.position.set(
     cameraDistance
 );
 
-camera.lookAt(0,0,0);
+camera.lookAt(
+    0,
+    0,
+    0
+);
 
 
 /* =====================================================
@@ -89,7 +95,7 @@ const renderer =
 renderer.setPixelRatio(
     Math.min(
         window.devicePixelRatio,
-        2
+        3
     )
 );
 
@@ -109,51 +115,61 @@ document
 
 
 /* =====================================================
-   خريطة الدائرة
+   خريطة عالية الدقة
 ===================================================== */
 
 const mapCanvas =
     document.createElement("canvas");
 
-mapCanvas.width = 2400;
-mapCanvas.height = 2400;
+mapCanvas.width =
+    4096;
+
+mapCanvas.height =
+    4096;
 
 const ctx =
-    mapCanvas.getContext("2d");
+    mapCanvas.getContext(
+        "2d"
+    );
 
 
 /* =====================================================
-   البحر
+   خلفية البحر
 ===================================================== */
 
 const ocean =
     ctx.createRadialGradient(
+        1500,
         1200,
-        1000,
         100,
-        1200,
-        1200,
-        1500
+        2048,
+        2048,
+        3000
     );
 
 ocean.addColorStop(
     0,
-    "#168fbd"
+    "#21b8e8"
 );
 
 ocean.addColorStop(
-    0.45,
-    "#086d99"
+    0.25,
+    "#0d91c5"
+);
+
+ocean.addColorStop(
+    0.50,
+    "#0873a5"
 );
 
 ocean.addColorStop(
     0.75,
-    "#045274"
+    "#04547c"
 );
 
 ocean.addColorStop(
     1,
-    "#02344f"
+    "#022d4b"
 );
 
 ctx.fillStyle =
@@ -162,22 +178,27 @@ ctx.fillStyle =
 ctx.fillRect(
     0,
     0,
-    2400,
-    2400
+    4096,
+    4096
 );
 
 
 /* =====================================================
-   دائرة الأرض
+   مركز الدائرة
 ===================================================== */
 
-const centerX = 1200;
-const centerY = 1200;
-const radius = 1080;
+const centerX =
+    2048;
+
+const centerY =
+    2048;
+
+const radius =
+    1830;
 
 
 /* =====================================================
-   قص الخريطة داخل الدائرة
+   قص كل شيء داخل الدائرة
 ===================================================== */
 
 ctx.save();
@@ -200,120 +221,32 @@ ctx.clip();
 ===================================================== */
 
 ctx.fillStyle =
-    "#55a84f";
+    "#68b84f";
 
 ctx.strokeStyle =
-    "#b9d98b";
+    "#d0e99b";
 
 ctx.lineWidth =
-    7;
+    10;
 
 
-/* أمريكا الشمالية */
-
-ctx.beginPath();
-
-ctx.moveTo(350,650);
-ctx.lineTo(450,500);
-ctx.lineTo(650,430);
-ctx.lineTo(850,520);
-ctx.lineTo(920,680);
-ctx.lineTo(820,790);
-ctx.lineTo(670,780);
-ctx.lineTo(560,900);
-ctx.lineTo(420,850);
-ctx.lineTo(330,740);
-
-ctx.closePath();
-
-ctx.fill();
-ctx.stroke();
-
-
-/* أمريكا الجنوبية */
+/* =====================================================
+   أمريكا الشمالية
+===================================================== */
 
 ctx.beginPath();
 
-ctx.moveTo(850,980);
-ctx.lineTo(1010,1030);
-ctx.lineTo(1080,1200);
-ctx.lineTo(1030,1450);
-ctx.lineTo(930,1700);
-ctx.lineTo(800,1550);
-ctx.lineTo(760,1350);
-ctx.lineTo(790,1160);
-
-ctx.closePath();
-
-ctx.fill();
-ctx.stroke();
-
-
-/* أوروبا */
-
-ctx.beginPath();
-
-ctx.moveTo(1050,600);
-ctx.lineTo(1180,520);
-ctx.lineTo(1350,550);
-ctx.lineTo(1430,650);
-ctx.lineTo(1340,730);
-ctx.lineTo(1180,720);
-ctx.lineTo(1080,680);
-
-ctx.closePath();
-
-ctx.fill();
-ctx.stroke();
-
-
-/* آسيا */
-
-ctx.beginPath();
-
-ctx.moveTo(1330,540);
-ctx.lineTo(1600,480);
-ctx.lineTo(1900,560);
-ctx.lineTo(2130,720);
-ctx.lineTo(2070,870);
-ctx.lineTo(1850,900);
-ctx.lineTo(1650,820);
-ctx.lineTo(1460,750);
-
-ctx.closePath();
-
-ctx.fill();
-ctx.stroke();
-
-
-/* أفريقيا */
-
-ctx.beginPath();
-
-ctx.moveTo(1160,800);
-ctx.lineTo(1340,820);
-ctx.lineTo(1430,1040);
-ctx.lineTo(1370,1290);
-ctx.lineTo(1230,1510);
-ctx.lineTo(1080,1370);
-ctx.lineTo(1040,1120);
-
-ctx.closePath();
-
-ctx.fill();
-ctx.stroke();
-
-
-/* أستراليا */
-
-ctx.beginPath();
-
-ctx.moveTo(1700,1390);
-ctx.lineTo(1910,1340);
-ctx.lineTo(2100,1440);
-ctx.lineTo(2080,1600);
-ctx.lineTo(1900,1670);
-ctx.lineTo(1710,1580);
+ctx.moveTo(550,1050);
+ctx.lineTo(650,800);
+ctx.lineTo(900,650);
+ctx.lineTo(1200,700);
+ctx.lineTo(1450,900);
+ctx.lineTo(1500,1150);
+ctx.lineTo(1320,1300);
+ctx.lineTo(1100,1280);
+ctx.lineTo(900,1450);
+ctx.lineTo(680,1350);
+ctx.lineTo(500,1200);
 
 ctx.closePath();
 
@@ -322,17 +255,124 @@ ctx.stroke();
 
 
 /* =====================================================
-   الجزر الرئيسية
+   أمريكا الجنوبية
+===================================================== */
+
+ctx.beginPath();
+
+ctx.moveTo(1500,1600);
+ctx.lineTo(1720,1650);
+ctx.lineTo(1870,1900);
+ctx.lineTo(1800,2250);
+ctx.lineTo(1680,2600);
+ctx.lineTo(1480,2900);
+ctx.lineTo(1320,2650);
+ctx.lineTo(1280,2350);
+ctx.lineTo(1340,2000);
+
+ctx.closePath();
+
+ctx.fill();
+ctx.stroke();
+
+
+/* =====================================================
+   أوروبا
+===================================================== */
+
+ctx.beginPath();
+
+ctx.moveTo(1850,1050);
+ctx.lineTo(2050,900);
+ctx.lineTo(2350,930);
+ctx.lineTo(2500,1080);
+ctx.lineTo(2380,1220);
+ctx.lineTo(2150,1200);
+ctx.lineTo(1950,1160);
+
+ctx.closePath();
+
+ctx.fill();
+ctx.stroke();
+
+
+/* =====================================================
+   آسيا
+===================================================== */
+
+ctx.beginPath();
+
+ctx.moveTo(2300,950);
+ctx.lineTo(2700,820);
+ctx.lineTo(3200,900);
+ctx.lineTo(3600,1120);
+ctx.lineTo(3780,1400);
+ctx.lineTo(3600,1600);
+ctx.lineTo(3250,1580);
+ctx.lineTo(2950,1450);
+ctx.lineTo(2600,1350);
+ctx.lineTo(2400,1200);
+
+ctx.closePath();
+
+ctx.fill();
+ctx.stroke();
+
+
+/* =====================================================
+   أفريقيا
+===================================================== */
+
+ctx.beginPath();
+
+ctx.moveTo(2050,1450);
+ctx.lineTo(2300,1500);
+ctx.lineTo(2450,1800);
+ctx.lineTo(2380,2200);
+ctx.lineTo(2200,2600);
+ctx.lineTo(1950,2800);
+ctx.lineTo(1750,2550);
+ctx.lineTo(1700,2200);
+ctx.lineTo(1800,1800);
+
+ctx.closePath();
+
+ctx.fill();
+ctx.stroke();
+
+
+/* =====================================================
+   أستراليا
+===================================================== */
+
+ctx.beginPath();
+
+ctx.moveTo(2850,2750);
+ctx.lineTo(3250,2670);
+ctx.lineTo(3600,2820);
+ctx.lineTo(3650,3100);
+ctx.lineTo(3400,3300);
+ctx.lineTo(3050,3260);
+ctx.lineTo(2800,3050);
+
+ctx.closePath();
+
+ctx.fill();
+ctx.stroke();
+
+
+/* =====================================================
+   الجزر
 ===================================================== */
 
 ctx.fillStyle =
-    "#69b75a";
+    "#78c45b";
 
 ctx.strokeStyle =
-    "#b9d98b";
+    "#d0e99b";
 
 ctx.lineWidth =
-    5;
+    8;
 
 
 function island(
@@ -363,80 +403,81 @@ function island(
 /* بريطانيا */
 
 island(
-    1020,
-    560,
-    35,
-    60
-);
-
-
-/* اليابان */
-
-island(
-    1950,
-    820,
-    35,
-    75
-);
-
-
-/* مدغشقر */
-
-island(
-    1500,
-    1380,
-    45,
-    110
-);
-
-
-/* نيوزيلندا */
-
-island(
-    2110,
-    1740,
-    30,
-    70
+    1800,
+    900,
+    55,
+    100
 );
 
 
 /* أيسلندا */
 
 island(
-    900,
-    400,
+    1550,
+    650,
+    90,
+    50
+);
+
+
+/* اليابان */
+
+island(
+    3500,
+    1500,
     55,
-    30
+    130
+);
+
+
+/* مدغشقر */
+
+island(
+    2650,
+    2750,
+    70,
+    180
+);
+
+
+/* نيوزيلندا */
+
+island(
+    3650,
+    3450,
+    50,
+    130
 );
 
 
 /* =====================================================
-   خطوط خفيفة للمحيطات
+   خطوط المحيط
 ===================================================== */
 
 ctx.strokeStyle =
-    "rgba(180,230,255,0.16)";
+    "rgba(220,245,255,0.16)";
 
-ctx.lineWidth = 3;
+ctx.lineWidth =
+    5;
 
 
-/* خطوط عرض */
+/* خطوط أفقية */
 
 for(
-    let y = 300;
-    y < 2200;
-    y += 180
+    let y = 500;
+    y < 3600;
+    y += 300
 ){
 
     ctx.beginPath();
 
     ctx.moveTo(
-        100,
+        150,
         y
     );
 
     ctx.lineTo(
-        2300,
+        3950,
         y
     );
 
@@ -445,24 +486,24 @@ for(
 }
 
 
-/* خطوط طول */
+/* خطوط عمودية */
 
 for(
-    let x = 300;
-    x < 2200;
-    x += 180
+    let x = 500;
+    x < 3600;
+    x += 300
 ){
 
     ctx.beginPath();
 
     ctx.moveTo(
         x,
-        100
+        150
     );
 
     ctx.lineTo(
         x,
-        2300
+        3950
     );
 
     ctx.stroke();
@@ -474,33 +515,8 @@ ctx.restore();
 
 
 /* =====================================================
-   لمعة داخل البحر
+   لمعان البحر
 ===================================================== */
-
-const shine =
-    ctx.createRadialGradient(
-        850,
-        650,
-        50,
-        850,
-        650,
-        1100
-    );
-
-shine.addColorStop(
-    0,
-    "rgba(255,255,255,0.20)"
-);
-
-shine.addColorStop(
-    0.45,
-    "rgba(255,255,255,0.06)"
-);
-
-shine.addColorStop(
-    1,
-    "rgba(255,255,255,0)"
-);
 
 ctx.save();
 
@@ -516,14 +532,44 @@ ctx.arc(
 
 ctx.clip();
 
+const shine =
+    ctx.createRadialGradient(
+        1250,
+        950,
+        80,
+        1250,
+        950,
+        2100
+    );
+
+shine.addColorStop(
+    0,
+    "rgba(255,255,255,0.22)"
+);
+
+shine.addColorStop(
+    0.35,
+    "rgba(255,255,255,0.08)"
+);
+
+shine.addColorStop(
+    0.7,
+    "rgba(255,255,255,0.02)"
+);
+
+shine.addColorStop(
+    1,
+    "rgba(255,255,255,0)"
+);
+
 ctx.fillStyle =
     shine;
 
 ctx.fillRect(
     0,
     0,
-    2400,
-    2400
+    4096,
+    4096
 );
 
 ctx.restore();
@@ -542,17 +588,25 @@ texture.colorSpace =
     THREE.SRGBColorSpace;
 
 texture.anisotropy =
-    renderer.capabilities.getMaxAnisotropy();
+    renderer
+        .capabilities
+        .getMaxAnisotropy();
+
+texture.minFilter =
+    THREE.LinearMipmapLinearFilter;
+
+texture.magFilter =
+    THREE.LinearFilter;
 
 
 /* =====================================================
-   الدائرة الرئيسية
+   الدائرة
 ===================================================== */
 
 const geometry =
     new THREE.CircleGeometry(
         5,
-        256
+        512
     );
 
 const material =
@@ -579,8 +633,8 @@ scene.add(
 const borderGeometry =
     new THREE.RingGeometry(
         5.00,
-        5.055,
-        256
+        5.065,
+        512
     );
 
 const borderMaterial =
@@ -604,14 +658,17 @@ scene.add(
 
 
 /* =====================================================
-   دوران أفقي فقط
+   الدوران الأفقي فقط
 ===================================================== */
 
-let dragging = false;
+let dragging =
+    false;
 
-let previousX = 0;
+let previousX =
+    0;
 
-let rotation = 0;
+let rotation =
+    0;
 
 
 renderer.domElement.addEventListener(
@@ -622,7 +679,8 @@ renderer.domElement.addEventListener(
             e.touches.length === 1
         ){
 
-            dragging = true;
+            dragging =
+                true;
 
             previousX =
                 e.touches[0].clientX;
@@ -662,7 +720,8 @@ renderer.domElement.addEventListener(
         border.rotation.z =
             rotation;
 
-        previousX = x;
+        previousX =
+            x;
 
     },
     {passive:false}
@@ -673,20 +732,24 @@ renderer.domElement.addEventListener(
     "touchend",
     function(){
 
-        dragging = false;
+        dragging =
+            false;
 
     }
 );
 
 
 /* =====================================================
-   التكبير والتصغير بإصبعين
+   الزوم — مدى أكبر
 ===================================================== */
 
-let oldDistance = null;
+let oldDistance =
+    null;
 
 
-function getDistance(touches){
+function getDistance(
+    touches
+){
 
     const dx =
         touches[0].clientX -
@@ -749,16 +812,18 @@ renderer.domElement.addEventListener(
                 (
                     distance -
                     oldDistance
-                ) * 0.015;
+                ) * 0.020;
+
 
             cameraDistance =
                 Math.max(
-                    7,
+                    6,
                     Math.min(
-                        18,
+                        35,
                         cameraDistance
                     )
                 );
+
 
             camera.position.z =
                 cameraDistance;
@@ -781,7 +846,8 @@ renderer.domElement.addEventListener(
             e.touches.length < 2
         ){
 
-            oldDistance = null;
+            oldDistance =
+                null;
 
         }
 
