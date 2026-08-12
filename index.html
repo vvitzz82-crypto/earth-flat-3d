@@ -10,37 +10,83 @@ initial-scale=1.0,
 maximum-scale=1.0,
 user-scalable=no">
 
-<title>Earth Circle High Detail</title>
+<title>Earth Flat High Detail</title>
 
 <style>
 
 html,body{
+
     width:100%;
     height:100%;
+
     margin:0;
     padding:0;
+
     overflow:hidden;
+
     background:#071522;
 }
 
 #earth{
+
     width:100%;
     height:100%;
+
     touch-action:none;
 }
 
 canvas{
+
     display:block;
 }
 
+#loading{
+
+    position:fixed;
+
+    top:50%;
+    left:50%;
+
+    transform:translate(-50%,-50%);
+
+    color:white;
+
+    font-family:Arial,sans-serif;
+
+    font-size:18px;
+
+    background:rgba(0,0,0,0.35);
+
+    padding:12px 18px;
+
+    border-radius:12px;
+
+    z-index:10;
+
+}
+
 </style>
+
 </head>
 
 <body>
 
 <div id="earth"></div>
 
+<div id="loading">
+جاري تحميل خريطة القارات...
+</div>
+
+
+<!-- Three.js -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+<!-- TopoJSON -->
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+
+<!-- D3 Geo -->
+<script src="https://cdn.jsdelivr.net/npm/d3-geo@3"></script>
+
 
 <script>
 
@@ -52,7 +98,9 @@ const scene =
     new THREE.Scene();
 
 scene.background =
-    new THREE.Color(0x071522);
+    new THREE.Color(
+        0x071522
+    );
 
 
 /* =====================================================
@@ -115,11 +163,13 @@ document
 
 
 /* =====================================================
-   خريطة عالية الدقة
+   Canvas الخريطة
 ===================================================== */
 
 const mapCanvas =
-    document.createElement("canvas");
+    document.createElement(
+        "canvas"
+    );
 
 mapCanvas.width =
     4096;
@@ -134,13 +184,13 @@ const ctx =
 
 
 /* =====================================================
-   خلفية البحر
+   البحر
 ===================================================== */
 
 const ocean =
     ctx.createRadialGradient(
-        1500,
-        1200,
+        1450,
+        1100,
         100,
         2048,
         2048,
@@ -149,27 +199,27 @@ const ocean =
 
 ocean.addColorStop(
     0,
-    "#21b8e8"
+    "#1fc0ec"
 );
 
 ocean.addColorStop(
     0.25,
-    "#0d91c5"
+    "#0d9bcc"
 );
 
 ocean.addColorStop(
     0.50,
-    "#0873a5"
+    "#0875a5"
 );
 
 ocean.addColorStop(
     0.75,
-    "#04547c"
+    "#04557c"
 );
 
 ocean.addColorStop(
     1,
-    "#022d4b"
+    "#022f4e"
 );
 
 ctx.fillStyle =
@@ -193,12 +243,12 @@ const centerX =
 const centerY =
     2048;
 
-const radius =
-    1830;
+const mapRadius =
+    1880;
 
 
 /* =====================================================
-   قص كل شيء داخل الدائرة
+   قص دائري
 ===================================================== */
 
 ctx.save();
@@ -208,7 +258,7 @@ ctx.beginPath();
 ctx.arc(
     centerX,
     centerY,
-    radius,
+    mapRadius,
     0,
     Math.PI * 2
 );
@@ -217,362 +267,271 @@ ctx.clip();
 
 
 /* =====================================================
-   القارات
+   الإسقاط الجغرافي
+   مركز الخريطة = القطب الشمالي
 ===================================================== */
 
-ctx.fillStyle =
-    "#68b84f";
-
-ctx.strokeStyle =
-    "#d0e99b";
-
-ctx.lineWidth =
-    10;
+const projection =
+    d3.geoAzimuthalEquidistant()
+      .rotate([0,-90])
+      .translate([
+          centerX,
+          centerY
+      ])
+      .scale(1180);
 
 
 /* =====================================================
-   أمريكا الشمالية
+   مسار الرسم
 ===================================================== */
 
-ctx.beginPath();
-
-ctx.moveTo(550,1050);
-ctx.lineTo(650,800);
-ctx.lineTo(900,650);
-ctx.lineTo(1200,700);
-ctx.lineTo(1450,900);
-ctx.lineTo(1500,1150);
-ctx.lineTo(1320,1300);
-ctx.lineTo(1100,1280);
-ctx.lineTo(900,1450);
-ctx.lineTo(680,1350);
-ctx.lineTo(500,1200);
-
-ctx.closePath();
-
-ctx.fill();
-ctx.stroke();
-
-
-/* =====================================================
-   أمريكا الجنوبية
-===================================================== */
-
-ctx.beginPath();
-
-ctx.moveTo(1500,1600);
-ctx.lineTo(1720,1650);
-ctx.lineTo(1870,1900);
-ctx.lineTo(1800,2250);
-ctx.lineTo(1680,2600);
-ctx.lineTo(1480,2900);
-ctx.lineTo(1320,2650);
-ctx.lineTo(1280,2350);
-ctx.lineTo(1340,2000);
-
-ctx.closePath();
-
-ctx.fill();
-ctx.stroke();
-
-
-/* =====================================================
-   أوروبا
-===================================================== */
-
-ctx.beginPath();
-
-ctx.moveTo(1850,1050);
-ctx.lineTo(2050,900);
-ctx.lineTo(2350,930);
-ctx.lineTo(2500,1080);
-ctx.lineTo(2380,1220);
-ctx.lineTo(2150,1200);
-ctx.lineTo(1950,1160);
-
-ctx.closePath();
-
-ctx.fill();
-ctx.stroke();
-
-
-/* =====================================================
-   آسيا
-===================================================== */
-
-ctx.beginPath();
-
-ctx.moveTo(2300,950);
-ctx.lineTo(2700,820);
-ctx.lineTo(3200,900);
-ctx.lineTo(3600,1120);
-ctx.lineTo(3780,1400);
-ctx.lineTo(3600,1600);
-ctx.lineTo(3250,1580);
-ctx.lineTo(2950,1450);
-ctx.lineTo(2600,1350);
-ctx.lineTo(2400,1200);
-
-ctx.closePath();
-
-ctx.fill();
-ctx.stroke();
-
-
-/* =====================================================
-   أفريقيا
-===================================================== */
-
-ctx.beginPath();
-
-ctx.moveTo(2050,1450);
-ctx.lineTo(2300,1500);
-ctx.lineTo(2450,1800);
-ctx.lineTo(2380,2200);
-ctx.lineTo(2200,2600);
-ctx.lineTo(1950,2800);
-ctx.lineTo(1750,2550);
-ctx.lineTo(1700,2200);
-ctx.lineTo(1800,1800);
-
-ctx.closePath();
-
-ctx.fill();
-ctx.stroke();
-
-
-/* =====================================================
-   أستراليا
-===================================================== */
-
-ctx.beginPath();
-
-ctx.moveTo(2850,2750);
-ctx.lineTo(3250,2670);
-ctx.lineTo(3600,2820);
-ctx.lineTo(3650,3100);
-ctx.lineTo(3400,3300);
-ctx.lineTo(3050,3260);
-ctx.lineTo(2800,3050);
-
-ctx.closePath();
-
-ctx.fill();
-ctx.stroke();
-
-
-/* =====================================================
-   الجزر
-===================================================== */
-
-ctx.fillStyle =
-    "#78c45b";
-
-ctx.strokeStyle =
-    "#d0e99b";
-
-ctx.lineWidth =
-    8;
-
-
-function island(
-    x,
-    y,
-    rx,
-    ry
-){
-
-    ctx.beginPath();
-
-    ctx.ellipse(
-        x,
-        y,
-        rx,
-        ry,
-        0,
-        0,
-        Math.PI * 2
+const path =
+    d3.geoPath(
+        projection,
+        ctx
     );
 
-    ctx.fill();
-    ctx.stroke();
-
-}
-
-
-/* بريطانيا */
-
-island(
-    1800,
-    900,
-    55,
-    100
-);
-
-
-/* أيسلندا */
-
-island(
-    1550,
-    650,
-    90,
-    50
-);
-
-
-/* اليابان */
-
-island(
-    3500,
-    1500,
-    55,
-    130
-);
-
-
-/* مدغشقر */
-
-island(
-    2650,
-    2750,
-    70,
-    180
-);
-
-
-/* نيوزيلندا */
-
-island(
-    3650,
-    3450,
-    50,
-    130
-);
-
 
 /* =====================================================
-   خطوط المحيط
-===================================================== */
-
-ctx.strokeStyle =
-    "rgba(220,245,255,0.16)";
-
-ctx.lineWidth =
-    5;
-
-
-/* خطوط أفقية */
-
-for(
-    let y = 500;
-    y < 3600;
-    y += 300
-){
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        150,
-        y
-    );
-
-    ctx.lineTo(
-        3950,
-        y
-    );
-
-    ctx.stroke();
-
-}
-
-
-/* خطوط عمودية */
-
-for(
-    let x = 500;
-    x < 3600;
-    x += 300
-){
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        x,
-        150
-    );
-
-    ctx.lineTo(
-        x,
-        3950
-    );
-
-    ctx.stroke();
-
-}
-
-
-ctx.restore();
-
-
-/* =====================================================
-   لمعان البحر
+   خطوط جغرافية خفيفة
 ===================================================== */
 
 ctx.save();
 
+ctx.strokeStyle =
+    "rgba(220,245,255,0.14)";
+
+ctx.lineWidth =
+    3;
+
+const graticule =
+    d3.geoGraticule()
+      .step([
+          10,
+          10
+      ]);
+
 ctx.beginPath();
 
-ctx.arc(
-    centerX,
-    centerY,
-    radius,
-    0,
-    Math.PI * 2
+path(
+    graticule()
 );
 
-ctx.clip();
-
-const shine =
-    ctx.createRadialGradient(
-        1250,
-        950,
-        80,
-        1250,
-        950,
-        2100
-    );
-
-shine.addColorStop(
-    0,
-    "rgba(255,255,255,0.22)"
-);
-
-shine.addColorStop(
-    0.35,
-    "rgba(255,255,255,0.08)"
-);
-
-shine.addColorStop(
-    0.7,
-    "rgba(255,255,255,0.02)"
-);
-
-shine.addColorStop(
-    1,
-    "rgba(255,255,255,0)"
-);
-
-ctx.fillStyle =
-    shine;
-
-ctx.fillRect(
-    0,
-    0,
-    4096,
-    4096
-);
+ctx.stroke();
 
 ctx.restore();
+
+
+/* =====================================================
+   تحميل اليابسة الحقيقية
+   Natural Earth 1:10m
+===================================================== */
+
+fetch(
+    "https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/land-10m.json"
+)
+
+.then(
+    response => {
+
+        if(!response.ok){
+
+            throw new Error(
+                "Map download failed"
+            );
+
+        }
+
+        return response.json();
+
+    }
+)
+
+.then(
+    world => {
+
+        const land =
+            topojson.feature(
+                world,
+                world.objects.land
+            );
+
+
+        /* =============================================
+           رسم القارات والجزُر الحقيقية
+        ============================================= */
+
+        ctx.save();
+
+        ctx.fillStyle =
+            "#67ad4f";
+
+        ctx.strokeStyle =
+            "#d5e99b";
+
+        ctx.lineWidth =
+            3.2;
+
+
+        ctx.beginPath();
+
+        path(
+            land
+        );
+
+        ctx.fill();
+
+        ctx.stroke();
+
+        ctx.restore();
+
+
+        /* =============================================
+           تظليل خفيف فوق اليابسة
+        ============================================= */
+
+        ctx.save();
+
+        ctx.beginPath();
+
+        path(
+            land
+        );
+
+        ctx.clip();
+
+
+        const landLight =
+            ctx.createRadialGradient(
+                1250,
+                950,
+                50,
+                1250,
+                950,
+                2300
+            );
+
+        landLight.addColorStop(
+            0,
+            "rgba(255,255,220,0.26)"
+        );
+
+        landLight.addColorStop(
+            0.40,
+            "rgba(255,255,255,0.07)"
+        );
+
+        landLight.addColorStop(
+            1,
+            "rgba(255,255,255,0)"
+        );
+
+        ctx.fillStyle =
+            landLight;
+
+        ctx.fillRect(
+            0,
+            0,
+            4096,
+            4096
+        );
+
+        ctx.restore();
+
+
+        /* =============================================
+           لمعان الماء
+        ============================================= */
+
+        ctx.save();
+
+        ctx.beginPath();
+
+        ctx.arc(
+            centerX,
+            centerY,
+            mapRadius,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.clip();
+
+
+        const waterLight =
+            ctx.createRadialGradient(
+                1200,
+                800,
+                50,
+                1200,
+                800,
+                2500
+            );
+
+        waterLight.addColorStop(
+            0,
+            "rgba(255,255,255,0.16)"
+        );
+
+        waterLight.addColorStop(
+            0.45,
+            "rgba(255,255,255,0.045)"
+        );
+
+        waterLight.addColorStop(
+            1,
+            "rgba(255,255,255,0)"
+        );
+
+        ctx.fillStyle =
+            waterLight;
+
+        ctx.fillRect(
+            0,
+            0,
+            4096,
+            4096
+        );
+
+        ctx.restore();
+
+
+        ctx.restore();
+
+
+        /* =============================================
+           تحديث الصورة
+        ============================================= */
+
+        texture.needsUpdate =
+            true;
+
+
+        document
+            .getElementById("loading")
+            .style.display =
+                "none";
+
+    }
+)
+
+.catch(
+    error => {
+
+        console.error(
+            error
+        );
+
+        const loading =
+            document.getElementById(
+                "loading"
+            );
+
+        loading.textContent =
+            "تعذر تحميل خريطة القارات";
+
+    }
+);
 
 
 /* =====================================================
@@ -600,26 +559,34 @@ texture.magFilter =
 
 
 /* =====================================================
-   الدائرة
+   القرص المسطح
 ===================================================== */
 
-const geometry =
+const diskGeometry =
     new THREE.CircleGeometry(
         5,
         512
     );
 
-const material =
+
+const diskMaterial =
     new THREE.MeshBasicMaterial({
-        map:texture,
-        side:THREE.DoubleSide
+
+        map:
+            texture,
+
+        side:
+            THREE.DoubleSide
+
     });
+
 
 const earth =
     new THREE.Mesh(
-        geometry,
-        material
+        diskGeometry,
+        diskMaterial
     );
+
 
 scene.add(
     earth
@@ -633,15 +600,22 @@ scene.add(
 const borderGeometry =
     new THREE.RingGeometry(
         5.00,
-        5.065,
+        5.075,
         512
     );
 
+
 const borderMaterial =
     new THREE.MeshBasicMaterial({
-        color:0xffffff,
-        side:THREE.DoubleSide
+
+        color:
+            0xffffff,
+
+        side:
+            THREE.DoubleSide
+
     });
+
 
 const border =
     new THREE.Mesh(
@@ -649,8 +623,9 @@ const border =
         borderMaterial
     );
 
+
 border.position.z =
-    0.03;
+    0.02;
 
 scene.add(
     border
@@ -688,7 +663,9 @@ renderer.domElement.addEventListener(
         }
 
     },
-    {passive:false}
+    {
+        passive:false
+    }
 );
 
 
@@ -700,19 +677,25 @@ renderer.domElement.addEventListener(
             !dragging ||
             e.touches.length !== 1
         ){
+
             return;
+
         }
 
         e.preventDefault();
 
+
         const x =
             e.touches[0].clientX;
+
 
         const dx =
             x - previousX;
 
+
         rotation +=
             dx * 0.005;
+
 
         earth.rotation.z =
             rotation;
@@ -720,11 +703,14 @@ renderer.domElement.addEventListener(
         border.rotation.z =
             rotation;
 
+
         previousX =
             x;
 
     },
-    {passive:false}
+    {
+        passive:false
+    }
 );
 
 
@@ -740,7 +726,7 @@ renderer.domElement.addEventListener(
 
 
 /* =====================================================
-   الزوم — مدى أكبر
+   Zoom واسع
 ===================================================== */
 
 let oldDistance =
@@ -783,7 +769,9 @@ renderer.domElement.addEventListener(
         }
 
     },
-    {passive:false}
+    {
+        passive:false
+    }
 );
 
 
@@ -794,15 +782,19 @@ renderer.domElement.addEventListener(
         if(
             e.touches.length !== 2
         ){
+
             return;
+
         }
 
         e.preventDefault();
+
 
         const distance =
             getDistance(
                 e.touches
             );
+
 
         if(
             oldDistance !== null
@@ -812,14 +804,14 @@ renderer.domElement.addEventListener(
                 (
                     distance -
                     oldDistance
-                ) * 0.020;
+                ) * 0.02;
 
 
             cameraDistance =
                 Math.max(
-                    6,
+                    5.5,
                     Math.min(
-                        35,
+                        40,
                         cameraDistance
                     )
                 );
@@ -830,11 +822,14 @@ renderer.domElement.addEventListener(
 
         }
 
+
         oldDistance =
             distance;
 
     },
-    {passive:false}
+    {
+        passive:false
+    }
 );
 
 
