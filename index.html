@@ -128,30 +128,35 @@ const starPositions =
         starCount * 3
     );
 
-for(let i=0;i<starCount;i++){
+for(
+    let i = 0;
+    i < starCount;
+    i++
+){
 
     const r =
-        45 + Math.random()*100;
+        45 + Math.random() * 100;
 
     const a =
-        Math.random()*Math.PI*2;
+        Math.random() *
+        Math.PI * 2;
 
     const b =
         Math.acos(
-            2*Math.random()-1
+            2 * Math.random() - 1
         );
 
-    starPositions[i*3] =
+    starPositions[i * 3] =
         r *
         Math.sin(b) *
         Math.cos(a);
 
-    starPositions[i*3+1] =
+    starPositions[i * 3 + 1] =
         r *
         Math.sin(b) *
         Math.sin(a);
 
-    starPositions[i*3+2] =
+    starPositions[i * 3 + 2] =
         r *
         Math.cos(b);
 }
@@ -166,9 +171,13 @@ starGeometry.setAttribute(
 
 const starMaterial =
     new THREE.PointsMaterial({
+
         color:0xffffff,
+
         size:0.10,
+
         transparent:true,
+
         opacity:0.8
     });
 
@@ -182,13 +191,14 @@ scene.add(stars);
 
 
 /* =====================================================
-   رسم الخريطة على قرص
+   لوحة الخريطة
 ===================================================== */
 
 const mapCanvas =
     document.createElement("canvas");
 
 mapCanvas.width = 2048;
+
 mapCanvas.height = 2048;
 
 const ctx =
@@ -196,42 +206,42 @@ const ctx =
 
 
 /* =====================================================
-   خلفية البحر
+   البحر
 ===================================================== */
 
 const ocean =
     ctx.createRadialGradient(
+        900,
+        700,
+        50,
         1024,
-        850,
-        80,
         1024,
-        1024,
-        1050
+        1100
     );
 
 ocean.addColorStop(
     0,
-    "#2bc4e8"
+    "#35c9ed"
 );
 
 ocean.addColorStop(
-    0.35,
-    "#0a90bc"
+    0.30,
+    "#0b9ac4"
 );
 
 ocean.addColorStop(
-    0.65,
-    "#076487"
+    0.55,
+    "#08749b"
 );
 
 ocean.addColorStop(
-    0.85,
-    "#044663"
+    0.78,
+    "#04516f"
 );
 
 ocean.addColorStop(
     1,
-    "#022c49"
+    "#022d49"
 );
 
 ctx.fillStyle =
@@ -246,18 +256,22 @@ ctx.fillRect(
 
 
 /* =====================================================
-   شبكة الخريطة
+   خطوط الطول والعرض
 ===================================================== */
 
 ctx.strokeStyle =
-    "rgba(190,235,255,0.16)";
+    "rgba(190,235,255,0.14)";
 
 ctx.lineWidth = 3;
 
 
 /* خطوط أفقية */
 
-for(let y=220;y<1900;y+=170){
+for(
+    let y = 220;
+    y < 1900;
+    y += 170
+){
 
     ctx.beginPath();
 
@@ -267,11 +281,11 @@ for(let y=220;y<1900;y+=170){
         850,
         Math.max(
             45,
-            Math.abs(y-1024)*0.5
+            Math.abs(y - 1024) * 0.5
         ),
         0,
         0,
-        Math.PI*2
+        Math.PI * 2
     );
 
     ctx.stroke();
@@ -280,7 +294,11 @@ for(let y=220;y<1900;y+=170){
 
 /* خطوط عمودية */
 
-for(let x=220;x<1900;x+=170){
+for(
+    let x = 220;
+    x < 1900;
+    x += 170
+){
 
     ctx.beginPath();
 
@@ -289,12 +307,12 @@ for(let x=220;x<1900;x+=170){
         1024,
         Math.max(
             45,
-            Math.abs(x-1024)*0.55
+            Math.abs(x - 1024) * 0.55
         ),
         850,
         0,
         0,
-        Math.PI*2
+        Math.PI * 2
     );
 
     ctx.stroke();
@@ -327,9 +345,11 @@ ctx.lineTo(700,620);
 ctx.lineTo(560,620);
 ctx.lineTo(470,720);
 ctx.lineTo(350,670);
+
 ctx.closePath();
 
 ctx.fill();
+
 ctx.stroke();
 
 
@@ -346,9 +366,11 @@ ctx.lineTo(560,1410);
 ctx.lineTo(500,1280);
 ctx.lineTo(500,1090);
 ctx.lineTo(540,900);
+
 ctx.closePath();
 
 ctx.fill();
+
 ctx.stroke();
 
 
@@ -363,9 +385,11 @@ ctx.lineTo(1160,480);
 ctx.lineTo(1100,550);
 ctx.lineTo(990,550);
 ctx.lineTo(900,500);
+
 ctx.closePath();
 
 ctx.fill();
+
 ctx.stroke();
 
 
@@ -382,9 +406,11 @@ ctx.lineTo(1690,720);
 ctx.lineTo(1490,700);
 ctx.lineTo(1300,630);
 ctx.lineTo(1130,560);
+
 ctx.closePath();
 
 ctx.fill();
+
 ctx.stroke();
 
 
@@ -400,9 +426,11 @@ ctx.lineTo(1010,1100);
 ctx.lineTo(920,1190);
 ctx.lineTo(840,1040);
 ctx.lineTo(820,860);
+
 ctx.closePath();
 
 ctx.fill();
+
 ctx.stroke();
 
 
@@ -417,20 +445,28 @@ ctx.lineTo(1800,1190);
 ctx.lineTo(1710,1310);
 ctx.lineTo(1530,1320);
 ctx.lineTo(1400,1220);
+
 ctx.closePath();
 
 ctx.fill();
+
 ctx.stroke();
 
 
 /* =====================================================
-   جزر
+   الجزر
 ===================================================== */
 
 ctx.fillStyle =
     "#78b95a";
 
-function island(x,y,rx,ry){
+
+function island(
+    x,
+    y,
+    rx,
+    ry
+){
 
     ctx.beginPath();
 
@@ -441,7 +477,7 @@ function island(x,y,rx,ry){
         ry,
         0,
         0,
-        Math.PI*2
+        Math.PI * 2
     );
 
     ctx.fill();
@@ -498,17 +534,21 @@ island(
 );
 
 
-/* جزر إضافية */
+/* جزر صغيرة */
 
 island(1350,760,9,14);
+
 island(1390,790,8,12);
+
 island(430,820,9,15);
+
 island(460,870,7,11);
+
 island(1860,860,8,12);
 
 
 /* =====================================================
-   لمعة
+   لمعة على الخريطة
 ===================================================== */
 
 const light =
@@ -575,24 +615,33 @@ const diskGeometry =
     );
 
 
-/* جسم القرص */
+/* جوانب القرص */
 
 const sideMaterial =
     new THREE.MeshPhongMaterial({
+
         color:0x073a52,
-        shininess:35
+
+        shininess:40
     });
 
+
+/* سطح الأرض */
 
 const topMaterial =
     new THREE.MeshPhongMaterial({
+
         map:texture,
-        shininess:35
+
+        shininess:45
     });
 
 
+/* أسفل القرص */
+
 const bottomMaterial =
     new THREE.MeshPhongMaterial({
+
         color:0x021d30
     });
 
@@ -608,32 +657,35 @@ const earth =
     );
 
 
-/* قلب القرص للكاميرا */
+/*
+   محور القرص يكون باتجاه الكاميرا
+   ولا نغير محور الميل بعد ذلك
+*/
 
 earth.rotation.x =
     Math.PI / 2;
 
-scene.add(
-    earth
-);
+scene.add(earth);
 
 
 /* =====================================================
-   الحافة المضيئة
+   حافة القرص
 ===================================================== */
 
 const rimGeometry =
     new THREE.TorusGeometry(
         5.02,
         0.12,
-        16,
+        20,
         192
     );
 
 const rimMaterial =
     new THREE.MeshPhongMaterial({
+
         color:0x8edfff,
-        shininess:90
+
+        shininess:100
     });
 
 const rim =
@@ -645,13 +697,11 @@ const rim =
 rim.position.z =
     0.18;
 
-scene.add(
-    rim
-);
+scene.add(rim);
 
 
 /* =====================================================
-   إضاءة
+   ضوء الشمس
 ===================================================== */
 
 const sun =
@@ -669,6 +719,10 @@ sun.position.set(
 scene.add(sun);
 
 
+/* =====================================================
+   الإضاءة العامة
+===================================================== */
+
 const ambient =
     new THREE.AmbientLight(
         0x4d8ba8,
@@ -679,17 +733,15 @@ scene.add(ambient);
 
 
 /* =====================================================
-   تحكم بالسحب
+   دوران أفقي فقط
 ===================================================== */
 
 let dragging = false;
 
 let lastX = 0;
 
-let lastY = 0;
 
-
-/* بداية */
+/* بداية اللمس */
 
 renderer.domElement.addEventListener(
     "touchstart",
@@ -703,9 +755,6 @@ renderer.domElement.addEventListener(
 
             lastX =
                 e.touches[0].clientX;
-
-            lastY =
-                e.touches[0].clientY;
         }
 
     },
@@ -713,7 +762,7 @@ renderer.domElement.addEventListener(
 );
 
 
-/* حركة */
+/* حركة الإصبع */
 
 renderer.domElement.addEventListener(
     "touchmove",
@@ -731,15 +780,13 @@ renderer.domElement.addEventListener(
         const x =
             e.touches[0].clientX;
 
-        const y =
-            e.touches[0].clientY;
-
         const dx =
             x - lastX;
 
-        const dy =
-            y - lastY;
 
+        /*
+           الدوران حول محور القرص فقط
+        */
 
         earth.rotation.z +=
             dx * 0.005;
@@ -748,23 +795,14 @@ renderer.domElement.addEventListener(
             earth.rotation.z;
 
 
-        earth.rotation.y +=
-            dy * 0.0015;
-
-        rim.rotation.y =
-            earth.rotation.y;
-
-
         lastX = x;
-
-        lastY = y;
 
     },
     {passive:false}
 );
 
 
-/* نهاية */
+/* نهاية اللمس */
 
 renderer.domElement.addEventListener(
     "touchend",
@@ -783,22 +821,24 @@ renderer.domElement.addEventListener(
 let oldDistance = null;
 
 
-function getDistance(t){
+function getDistance(touches){
 
     const dx =
-        t[0].clientX -
-        t[1].clientX;
+        touches[0].clientX -
+        touches[1].clientX;
 
     const dy =
-        t[0].clientY -
-        t[1].clientY;
+        touches[0].clientY -
+        touches[1].clientY;
 
     return Math.sqrt(
-        dx*dx +
-        dy*dy
+        dx * dx +
+        dy * dy
     );
 }
 
+
+/* بداية التكبير */
 
 renderer.domElement.addEventListener(
     "touchstart",
@@ -819,6 +859,8 @@ renderer.domElement.addEventListener(
 );
 
 
+/* حركة التكبير */
+
 renderer.domElement.addEventListener(
     "touchmove",
     function(e){
@@ -831,7 +873,7 @@ renderer.domElement.addEventListener(
 
         e.preventDefault();
 
-        const d =
+        const distance =
             getDistance(
                 e.touches
             );
@@ -843,7 +885,7 @@ renderer.domElement.addEventListener(
 
             cameraDistance -=
                 (
-                    d -
+                    distance -
                     oldDistance
                 ) * 0.018;
 
@@ -864,12 +906,14 @@ renderer.domElement.addEventListener(
 
 
         oldDistance =
-            d;
+            distance;
 
     },
     {passive:false}
 );
 
+
+/* نهاية التكبير */
 
 renderer.domElement.addEventListener(
     "touchend",
@@ -881,7 +925,6 @@ renderer.domElement.addEventListener(
 
             oldDistance =
                 null;
-
         }
 
     }
@@ -899,9 +942,11 @@ function animate(){
     );
 
 
-    if(
-        !dragging
-    ){
+    /*
+       دوران تلقائي أفقي فقط
+    */
+
+    if(!dragging){
 
         earth.rotation.z +=
             0.0004;
@@ -910,6 +955,10 @@ function animate(){
             earth.rotation.z;
     }
 
+
+    /*
+       حركة النجوم ببطء
+    */
 
     stars.rotation.y +=
         0.00003;
@@ -950,4 +999,4 @@ window.addEventListener(
 </script>
 
 </body>
-</html>
+    </html>
