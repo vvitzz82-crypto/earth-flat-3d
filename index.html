@@ -5,48 +5,32 @@
 <meta charset="UTF-8">
 
 <meta name="viewport"
-      content="width=device-width,
-               initial-scale=1.0,
-               maximum-scale=1.0,
-               user-scalable=no">
+content="width=device-width,
+initial-scale=1.0,
+maximum-scale=1.0,
+user-scalable=no">
 
-<title>Blue Circle</title>
+<title>Earth Flat Map</title>
 
 <style>
 
-html,
-body{
-
+html,body{
     width:100%;
     height:100%;
-
     margin:0;
     padding:0;
-
     overflow:hidden;
-
-    background:#063b55;
-
+    background:#06121c;
 }
 
-#app{
-
+#earth{
     width:100%;
     height:100%;
-
-    display:flex;
-
-    align-items:center;
-    justify-content:center;
-
     touch-action:none;
-
 }
 
 canvas{
-
     display:block;
-
 }
 
 </style>
@@ -55,164 +39,686 @@ canvas{
 
 <body>
 
-<div id="app"></div>
+<div id="earth"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 
 <script>
 
-/* =========================================
-   Canvas
-========================================= */
+/* =====================================================
+   المشهد
+===================================================== */
+
+const scene = new THREE.Scene();
+
+scene.background =
+    new THREE.Color(0x06121c);
+
+
+/* =====================================================
+   الكاميرا
+===================================================== */
+
+const camera =
+    new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth /
+        window.innerHeight,
+        0.1,
+        100
+    );
+
+let zoom = 8;
+
+camera.position.set(
+    0,
+    0,
+    zoom
+);
+
+camera.lookAt(
+    0,
+    0,
+    0
+);
+
+
+/* =====================================================
+   Renderer
+===================================================== */
+
+const renderer =
+    new THREE.WebGLRenderer({
+        antialias:true
+    });
+
+renderer.setPixelRatio(
+    Math.min(
+        window.devicePixelRatio,
+        2
+    )
+);
+
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
+
+renderer.outputColorSpace =
+    THREE.SRGBColorSpace;
+
+document
+.getElementById("earth")
+.appendChild(
+    renderer.domElement
+);
+
+
+/* =====================================================
+   خريطة عالية الدقة
+===================================================== */
 
 const canvas =
     document.createElement("canvas");
 
+canvas.width = 4096;
+canvas.height = 4096;
+
 const ctx =
     canvas.getContext("2d");
 
-document
-    .getElementById("app")
-    .appendChild(canvas);
+
+/* =====================================================
+   البحر
+===================================================== */
+
+const ocean =
+    ctx.createRadialGradient(
+        1900,
+        1600,
+        100,
+        2000,
+        2000,
+        2500
+    );
+
+ocean.addColorStop(
+    0,
+    "#159dcc"
+);
+
+ocean.addColorStop(
+    0.35,
+    "#087eaa"
+);
+
+ocean.addColorStop(
+    0.7,
+    "#07567e"
+);
+
+ocean.addColorStop(
+    1,
+    "#032d4c"
+);
+
+ctx.fillStyle =
+    ocean;
+
+ctx.fillRect(
+    0,
+    0,
+    4096,
+    4096
+);
 
 
-/* =========================================
-   حجم الشاشة
-========================================= */
+/* =====================================================
+   دائرة الأرض
+===================================================== */
 
-function resize(){
+const centerX = 2048;
+const centerY = 2048;
 
-    canvas.width =
-        window.innerWidth *
-        window.devicePixelRatio;
+const radius = 1900;
 
-    canvas.height =
-        window.innerHeight *
-        window.devicePixelRatio;
 
-    canvas.style.width =
-        window.innerWidth + "px";
+/* =====================================================
+   قص داخل الدائرة
+===================================================== */
 
-    canvas.style.height =
-        window.innerHeight + "px";
+ctx.save();
 
-    draw();
+ctx.beginPath();
 
+ctx.arc(
+    centerX,
+    centerY,
+    radius,
+    0,
+    Math.PI * 2
+);
+
+ctx.clip();
+
+
+/* =====================================================
+   شبكة خفيفة
+===================================================== */
+
+ctx.strokeStyle =
+    "rgba(180,235,255,0.12)";
+
+ctx.lineWidth = 4;
+
+
+/* خطوط أفقية */
+
+for(
+    let y = 200;
+    y < 3900;
+    y += 300
+){
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        0,
+        y
+    );
+
+    ctx.lineTo(
+        4096,
+        y
+    );
+
+    ctx.stroke();
 }
 
 
-/* =========================================
-   إعدادات الدائرة
-========================================= */
+/* خطوط عمودية */
 
-let scale = 1;
+for(
+    let x = 200;
+    x < 3900;
+    x += 300
+){
 
-const minScale = 0.5;
+    ctx.beginPath();
 
-const maxScale = 2.5;
-
-
-/* =========================================
-   رسم الدائرة
-========================================= */
-
-function draw(){
-
-    const width =
-        window.innerWidth;
-
-    const height =
-        window.innerHeight;
-
-    ctx.setTransform(
-        window.devicePixelRatio,
-        0,
-        0,
-        window.devicePixelRatio,
-        0,
+    ctx.moveTo(
+        x,
         0
     );
 
-    ctx.clearRect(
-        0,
-        0,
-        width,
-        height
+    ctx.lineTo(
+        x,
+        4096
     );
 
-
-    /* مركز الشاشة */
-
-    const centerX =
-        width / 2;
-
-    const centerY =
-        height / 2;
+    ctx.stroke();
+}
 
 
-    /* حجم الدائرة */
+/* =====================================================
+   القارات
+===================================================== */
 
-    const baseRadius =
-        Math.min(
-            width,
-            height
-        ) * 0.30;
+ctx.fillStyle =
+    "#5fa84d";
 
-    const radius =
-        baseRadius * scale;
+ctx.strokeStyle =
+    "#b7dc8a";
+
+ctx.lineWidth =
+    7;
 
 
-    /* =====================================
-       الدائرة الزرقاء
-    ===================================== */
+/* =====================================================
+   أمريكا الشمالية
+===================================================== */
+
+ctx.beginPath();
+
+ctx.moveTo(480,1150);
+ctx.lineTo(600,950);
+ctx.lineTo(850,820);
+ctx.lineTo(1120,850);
+ctx.lineTo(1370,1050);
+ctx.lineTo(1500,1280);
+ctx.lineTo(1370,1450);
+ctx.lineTo(1160,1480);
+ctx.lineTo(1010,1600);
+ctx.lineTo(820,1540);
+ctx.lineTo(700,1700);
+ctx.lineTo(530,1600);
+ctx.lineTo(430,1400);
+ctx.closePath();
+
+ctx.fill();
+ctx.stroke();
+
+
+/* =====================================================
+   أمريكا الجنوبية
+===================================================== */
+
+ctx.beginPath();
+
+ctx.moveTo(1370,1850);
+ctx.lineTo(1510,1940);
+ctx.lineTo(1580,2180);
+ctx.lineTo(1540,2450);
+ctx.lineTo(1460,2720);
+ctx.lineTo(1330,3000);
+ctx.lineTo(1190,3180);
+ctx.lineTo(1080,3000);
+ctx.lineTo(1040,2730);
+ctx.lineTo(1090,2460);
+ctx.lineTo(1160,2200);
+ctx.lineTo(1230,1980);
+ctx.closePath();
+
+ctx.fill();
+ctx.stroke();
+
+
+/* =====================================================
+   أوروبا
+===================================================== */
+
+ctx.beginPath();
+
+ctx.moveTo(1900,1050);
+ctx.lineTo(2050,950);
+ctx.lineTo(2220,980);
+ctx.lineTo(2350,1080);
+ctx.lineTo(2280,1200);
+ctx.lineTo(2100,1220);
+ctx.lineTo(1960,1160);
+ctx.closePath();
+
+ctx.fill();
+ctx.stroke();
+
+
+/* =====================================================
+   آسيا
+===================================================== */
+
+ctx.beginPath();
+
+ctx.moveTo(2250,950);
+ctx.lineTo(2500,820);
+ctx.lineTo(2800,850);
+ctx.lineTo(3100,1000);
+ctx.lineTo(3400,1200);
+ctx.lineTo(3540,1450);
+ctx.lineTo(3350,1600);
+ctx.lineTo(3050,1580);
+ctx.lineTo(2800,1500);
+ctx.lineTo(2550,1370);
+ctx.lineTo(2320,1250);
+ctx.closePath();
+
+ctx.fill();
+ctx.stroke();
+
+
+/* =====================================================
+   أفريقيا
+===================================================== */
+
+ctx.beginPath();
+
+ctx.moveTo(1980,1350);
+ctx.lineTo(2180,1370);
+ctx.lineTo(2300,1580);
+ctx.lineTo(2290,1880);
+ctx.lineTo(2200,2200);
+ctx.lineTo(2070,2480);
+ctx.lineTo(1910,2680);
+ctx.lineTo(1780,2500);
+ctx.lineTo(1740,2200);
+ctx.lineTo(1780,1900);
+ctx.lineTo(1830,1600);
+ctx.closePath();
+
+ctx.fill();
+ctx.stroke();
+
+
+/* =====================================================
+   أستراليا
+===================================================== */
+
+ctx.beginPath();
+
+ctx.moveTo(2920,2350);
+ctx.lineTo(3150,2280);
+ctx.lineTo(3400,2340);
+ctx.lineTo(3560,2480);
+ctx.lineTo(3500,2680);
+ctx.lineTo(3300,2770);
+ctx.lineTo(3060,2740);
+ctx.lineTo(2890,2600);
+ctx.closePath();
+
+ctx.fill();
+ctx.stroke();
+
+
+/* =====================================================
+   الجزر الرئيسية
+===================================================== */
+
+ctx.fillStyle =
+    "#6db457";
+
+
+function island(
+    x,
+    y,
+    rx,
+    ry
+){
 
     ctx.beginPath();
 
-    ctx.arc(
-        centerX,
-        centerY,
-        radius,
+    ctx.ellipse(
+        x,
+        y,
+        rx,
+        ry,
+        0,
         0,
         Math.PI * 2
     );
-
-    ctx.fillStyle =
-        "#087fae";
 
     ctx.fill();
-
-
-    /* =====================================
-       الإطار الأبيض
-    ===================================== */
-
-    ctx.beginPath();
-
-    ctx.arc(
-        centerX,
-        centerY,
-        radius,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.strokeStyle =
-        "#ffffff";
-
-    ctx.lineWidth =
-        6;
 
     ctx.stroke();
 
 }
 
 
-/* =========================================
-   التكبير بإصبعين
-========================================= */
+/* بريطانيا */
 
-let oldDistance = null;
+island(
+    1820,
+    970,
+    45,
+    80
+);
 
 
-function distance(touches){
+/* اليابان */
+
+island(
+    3300,
+    1450,
+    35,
+    100
+);
+
+
+/* مدغشقر */
+
+island(
+    2420,
+    2500,
+    55,
+    130
+);
+
+
+/* نيوزيلندا */
+
+island(
+    3600,
+    2920,
+    35,
+    90
+);
+
+
+/* أيسلندا */
+
+island(
+    1600,
+    700,
+    70,
+    40
+);
+
+
+/* =====================================================
+   إضاءة ناعمة
+===================================================== */
+
+const light =
+    ctx.createRadialGradient(
+        1200,
+        900,
+        100,
+        1200,
+        900,
+        2600
+    );
+
+light.addColorStop(
+    0,
+    "rgba(255,255,255,0.20)"
+);
+
+light.addColorStop(
+    0.45,
+    "rgba(255,255,255,0.06)"
+);
+
+light.addColorStop(
+    1,
+    "rgba(255,255,255,0)"
+);
+
+ctx.fillStyle =
+    light;
+
+ctx.fillRect(
+    0,
+    0,
+    4096,
+    4096
+);
+
+ctx.restore();
+
+
+/* =====================================================
+   Texture
+===================================================== */
+
+const texture =
+    new THREE.CanvasTexture(
+        canvas
+    );
+
+texture.colorSpace =
+    THREE.SRGBColorSpace;
+
+texture.anisotropy =
+    renderer.capabilities.getMaxAnisotropy();
+
+
+/* =====================================================
+   الدائرة المسطحة
+===================================================== */
+
+const geometry =
+    new THREE.CircleGeometry(
+        4.8,
+        256
+    );
+
+
+const material =
+    new THREE.MeshBasicMaterial({
+
+        map:
+            texture,
+
+        side:
+            THREE.DoubleSide
+
+    });
+
+
+const earth =
+    new THREE.Mesh(
+        geometry,
+        material
+    );
+
+scene.add(
+    earth
+);
+
+
+/* =====================================================
+   الحافة البيضاء
+===================================================== */
+
+const borderGeometry =
+    new THREE.RingGeometry(
+        4.82,
+        4.91,
+        256
+    );
+
+
+const borderMaterial =
+    new THREE.MeshBasicMaterial({
+
+        color:
+            0xffffff,
+
+        side:
+            THREE.DoubleSide
+
+    });
+
+
+const border =
+    new THREE.Mesh(
+        borderGeometry,
+        borderMaterial
+    );
+
+border.position.z =
+    0.01;
+
+scene.add(
+    border
+);
+
+
+/* =====================================================
+   دوران أفقي فقط
+===================================================== */
+
+let dragging =
+    false;
+
+let lastX =
+    0;
+
+let rotation =
+    0;
+
+
+renderer.domElement.addEventListener(
+    "touchstart",
+    function(e){
+
+        if(
+            e.touches.length === 1
+        ){
+
+            dragging =
+                true;
+
+            lastX =
+                e.touches[0].clientX;
+
+        }
+
+    },
+    {
+        passive:false
+    }
+);
+
+
+renderer.domElement.addEventListener(
+    "touchmove",
+    function(e){
+
+        if(
+            !dragging ||
+            e.touches.length !== 1
+        ){
+            return;
+        }
+
+        e.preventDefault();
+
+        const x =
+            e.touches[0].clientX;
+
+        const dx =
+            x - lastX;
+
+        rotation +=
+            dx * 0.004;
+
+        earth.rotation.z =
+            rotation;
+
+        border.rotation.z =
+            rotation;
+
+        lastX =
+            x;
+
+    },
+    {
+        passive:false
+    }
+);
+
+
+renderer.domElement.addEventListener(
+    "touchend",
+    function(){
+
+        dragging =
+            false;
+
+    }
+);
+
+
+/* =====================================================
+   التكبير والتصغير
+===================================================== */
+
+let oldDistance =
+    null;
+
+
+function distance(
+    touches
+){
 
     const dx =
         touches[0].clientX -
@@ -230,7 +736,7 @@ function distance(touches){
 }
 
 
-canvas.addEventListener(
+renderer.domElement.addEventListener(
     "touchstart",
     function(e){
 
@@ -239,71 +745,71 @@ canvas.addEventListener(
         ){
 
             oldDistance =
-                distance(e.touches);
+                distance(
+                    e.touches
+                );
 
         }
 
     },
-    {passive:false}
+    {
+        passive:false
+    }
 );
 
 
-canvas.addEventListener(
+renderer.domElement.addEventListener(
     "touchmove",
     function(e){
 
         if(
             e.touches.length !== 2
         ){
-
             return;
-
         }
 
         e.preventDefault();
 
-
         const newDistance =
-            distance(e.touches);
-
+            distance(
+                e.touches
+            );
 
         if(
             oldDistance !== null
         ){
 
-            const difference =
-                newDistance -
-                oldDistance;
+            zoom -=
+                (
+                    newDistance -
+                    oldDistance
+                ) * 0.012;
 
-
-            scale +=
-                difference * 0.005;
-
-
-            scale =
+            zoom =
                 Math.max(
-                    minScale,
+                    5.5,
                     Math.min(
-                        maxScale,
-                        scale
+                        15,
+                        zoom
                     )
                 );
 
-
-            draw();
+            camera.position.z =
+                zoom;
 
         }
-
 
         oldDistance =
             newDistance;
 
     },
-    {passive:false}
+    {
+        passive:false
+    }
 );
 
 
-canvas.addEventListener(
+renderer.domElement.addEventListener(
     "touchend",
     function(e){
 
@@ -316,21 +822,51 @@ canvas.addEventListener(
 
         }
 
-    },
-    {passive:false}
+    }
 );
 
 
-/* =========================================
-   تشغيل
-========================================= */
+/* =====================================================
+   التشغيل
+===================================================== */
+
+function animate(){
+
+    requestAnimationFrame(
+        animate
+    );
+
+    renderer.render(
+        scene,
+        camera
+    );
+
+}
+
+animate();
+
+
+/* =====================================================
+   الشاشة
+===================================================== */
 
 window.addEventListener(
     "resize",
-    resize
-);
+    function(){
 
-resize();
+        camera.aspect =
+            window.innerWidth /
+            window.innerHeight;
+
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(
+            window.innerWidth,
+            window.innerHeight
+        );
+
+    }
+);
 
 </script>
 
