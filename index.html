@@ -334,15 +334,13 @@ async function loadLand(){
 
         console.error(e);
 
-        loading.style.display = "none";
+loading.style.display = "none";
 
-        errorBox.style.display = "block";
+errorBox.style.display = "block";
 
-        errorBox.innerHTML =
-            "تعذر تحميل القارات.<br><br>" +
-            "تأكد أن ملف land-50m.json موجود في نفس المشروع.";
+errorBox.innerHTML =
+    "خطأ: " + e.message;
     }
-}
 
 
 /* السحب */
