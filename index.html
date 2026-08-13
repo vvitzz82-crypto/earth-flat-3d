@@ -226,25 +226,25 @@ function drawPolygon(coordinates){
 
 /* رسم القارات */
 
+      
 function drawGeometry(geometry){
+
+    if(!geometry) return;
 
     if(geometry.type === "Polygon"){
 
-        for(const ring of geometry.coordinates){
-
-            drawPolygon(ring);
-        }
+        drawPolygon(geometry.coordinates[0]);
 
     }
 
-
-    if(geometry.type === "MultiPolygon"){
+    else if(geometry.type === "MultiPolygon"){
 
         for(const polygon of geometry.coordinates){
 
-            for(const ring of polygon){
+            if(polygon && polygon[0]){
 
-                drawPolygon(ring);
+                drawPolygon(polygon[0]);
+
             }
         }
     }
